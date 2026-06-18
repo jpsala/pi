@@ -1,0 +1,27 @@
+# Secrets and local configuration
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local agent compatibility links / machine-specific adapters
+.agents/
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+.bun/
+
+# Logs and local databases
+*.log
+*.db
+*.sqlite
+*.sqlite3
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

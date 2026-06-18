@@ -1,0 +1,27 @@
+# Topics
+
+Router liviano. Usar para decidir que abrir, no como lectura completa.
+
+## Topics De Entrada
+
+| Si JP menciona | Abrir primero | Uso |
+| --- | --- | --- |
+| init os, adopt os, update os, realinear os, perfect os | [Operaciones OS](topics/agentic-os-operations.md), [Calidad OS](topics/os-quality.md) | Crear, actualizar o auditar la capa agentica sin tocar producto/datos/deploy. |
+| documentacion, topics, indice, working memory | [Sistema de conocimiento](topics/docs-knowledge-system.md) | Mantener docs livianos y recuperables. |
+| skills, comandos locales, .agents/skills | [Skills locales](topics/local-codex-skills.md) | `docs/skills/` canon y `.agents/skills` como junction/toggle. |
+| Pi, /os-sync, /ask, /gol, .pi | [Pi Agentic OS](topics/pi-agentic-os.md), [OS Playbook](OS_PLAYBOOK.md) | Adapter Pi opcional; instalar solo si aplica. |
+
+## Documentos Raiz
+
+- [README.md](README.md): mapa documental.
+- [PROJECT.md](PROJECT.md): identidad y alcance pendiente.
+- [DEVELOPMENT.md](DEVELOPMENT.md): stack/comandos/persistencia.
+- [WORKING_MEMORY.md](WORKING_MEMORY.md): estado vivo corto.
+- [OS_PLAYBOOK.md](OS_PLAYBOOK.md): comandos OS.
+- [GLOSSARY.md](GLOSSARY.md): aliases.
+- [DECISIONS.md](DECISIONS.md): decisiones durables.
+- [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md): preguntas abiertas.
+
+## Mantenimiento
+
+Si un doc util no esta linkeado aca, en un topic, track, spec, README o indice, esta colgado.
