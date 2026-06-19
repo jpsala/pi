@@ -4,13 +4,13 @@
 
 ## Regla
 
-- `.agents/skills` es solo compatibilidad tecnica por junction/toggle.
+- `.agents/skills` es solo compatibilidad tecnica por junction/toggle/symlink local.
 - No duplicar una carpeta real en `.agents/skills`.
-- En este init minimo, `.agents/skills` queda deshabilitado hasta que haga falta discovery.
+- Estado actual: `.agents/skills` existe como symlink local ignorado por git hacia `docs/skills/`; no guardar contenido durable alli.
 
 ## Contenido Inicial
 
-Skills operativas AOS copiadas desde el kit canonico:
+Skills operativas AOS copiadas/adaptadas desde el kit canonico:
 
 - `os-help`, `init-os`, `adopt-os`, `update-os`, `align-os-project`, `perfect-os`, `realinear-os`.
 - `sigamos`, `gol-lite`, `guardar-sesion`, `nueva-sesion`, `nueva-sesion-con-gol`.
@@ -26,3 +26,7 @@ powershell -ExecutionPolicy Bypass -File scripts/toggle-skills-link.ps1 status
 bun scripts/context-index.ts
 bun scripts/agent-context-audit.ts
 ```
+
+## Orquestacion
+
+- `aos-orquestar/`: proponer o ejecutar un fan-out controlado con threads/subagentes AOS.

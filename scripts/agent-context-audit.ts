@@ -107,6 +107,10 @@ function listDirs(path: string) {
     .sort();
 }
 
+function backtickedSkillRefs(content: string) {
+  return [...content.matchAll(/`([^`*\/]+)\/`/g)].map((match) => match[1]).sort();
+}
+
 function walkMarkdownFiles(dir: string): string[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -249,6 +253,15 @@ if (exists("docs/skills")) {
   const skillDirs = listDirs("docs/skills");
   if (!skillDirs.length) {
     add("warn", "docs/skills/ exists but has no skill directories");
+  }
+
+  if (exists("docs/skills/README.md")) {
+    const skillNames = new Set(skillDirs.map((dir) => dir.split("/").at(-1) ?? dir));
+    for (const skillName of backtickedSkillRefs(read("docs/skills/README.md"))) {
+      if (!skillNames.has(skillName)) {
+        add("warn", `docs/skills/README.md references missing skill docs/skills/${skillName}/`);
+      }
+    }
   }
 
   for (const skillDir of skillDirs) {
