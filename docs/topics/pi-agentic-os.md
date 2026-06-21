@@ -19,9 +19,41 @@ primary_refs:
 
 ## Estado
 
-Adapter `.pi/` no instalado en este init minimo. Agregarlo solo si este workspace necesita prompts/extensiones Pi propios.
+Adapter Pi local instalado en `.pi/` con prompts/comandos AOS y extensiones de soporte (`aos-tools.ts`, `aos-checkpoint-nudge.ts`). Extensión global adicional activa: `C:\Users\jpsal\.pi\agent\extensions\windows-input.ts`.
+
+Configuracion global Pi de Windows alineada el 2026-06-20 con `jpsal@192.168.100.8`:
+
+- Pi CLI `0.79.8`, proveedor/modelo por defecto `openai-codex/gpt-5.5`, thinking `high`.
+- Tema `jp-tokyo-night-user-focus`, `powerline.enabled=false`, `defaultProjectTrust=always`.
+- Paquetes activos: `pi-rtk-optimizer`, `pi-codemapper`, `pi-minimal-subagent`, `pi-observational-memory`, `pi-web-access`, `pi-mcp-extension`, `pi-until-done`, `pi-chrome`, `pi-council`, `@llblab/pi-telegram`, `@calesennett/pi-codex-usage`, `@mporenta/pi-discord-remote`, `@juicesharp/rpiv-ask-user-question`, `@juicesharp/rpiv-i18n`, `@venthezone/picord`, `pi-ask-user`, `pi-footer`, `pi-agents-pool`.
+- Recursos globales copiados: `AGENTS.md`, `keybindings.json`, `mcp.json`, `models.json`, `telegram.json`, configs de `pi-footer` y `pi-rtk-optimizer`, prompt `codex-usage`, tema `jp-tokyo-night-user-focus`.
+- `cm.exe` copiado a `~/.local/bin` y disponible en PATH.
+- Extensión global `windows-input.ts`: input principal estilo Windows/VS Code mediante `CustomEditor`; comandos `/windows-input status|on|off|toggle`; status footer `win-input`.
 
 Repo remoto publico: `https://github.com/jpsala/pi`.
+
+## Extension Windows Input
+
+Archivo activo global:
+
+```text
+C:\Users\jpsal\.pi\agent\extensions\windows-input.ts
+```
+
+Resumen:
+
+- Se carga automáticamente para todos los proyectos desde `~/.pi/agent/extensions/`.
+- En sesiones existentes, usar `/reload` para recargar.
+- Agrega selección/edición en el prompt principal: `Ctrl+A`, `Shift+Arrow`, `Ctrl+Shift+Arrow`, `Shift+Home/End`, copy/cut/delete/paste sobre selección.
+- Se puede alternar con `/windows-input on|off|toggle|status`.
+
+Limitaciones y cuidado:
+
+- Sólo reemplaza el editor principal de prompts en TUI; no cubre dialogs/selectores/overlays ni selección de mouse.
+- Usa internals JS del editor de Pi; ante problemas, desactivar con `/windows-input off` o mover el archivo fuera de `~/.pi/agent/extensions/`.
+- No duplicar en `.pi/extensions/` mientras exista globalmente: Pi descubre extensiones globales y project-locales, y los comandos duplicados se sufijan (`/windows-input:1`).
+
+Detalle recuperable: `docs/topics/windows-input-extension.md`.
 
 ## Uso En Pi
 

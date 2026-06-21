@@ -17,3 +17,4 @@
 | Gol Lite | Lote chico verificable sin `/until-done`. |
 | Guardar Sesion | Persistir valor durable en docs vivos. |
 | Nueva Sesion | Guardar y preparar handoff compacto para una sesion limpia. |
+| Windows Input | Extensión global `windows-input.ts` que reemplaza el prompt principal de Pi con selección/edición estilo Windows/VS Code. |

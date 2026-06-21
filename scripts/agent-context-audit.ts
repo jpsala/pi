@@ -1,5 +1,6 @@
 import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { homedir } from "node:os";
+import { isAbsolute, join, relative } from "node:path";
 
 type Finding = {
   level: "error" | "warn";
@@ -8,13 +9,18 @@ type Finding = {
 
 const root = process.cwd();
 const findings: Finding[] = [];
+const globalPiExtensionsDir = join(homedir(), ".pi", "agent", "extensions");
+
+function fullPath(path: string) {
+  return isAbsolute(path) ? path : join(root, path);
+}
 
 function read(path: string) {
-  return readFileSync(join(root, path), "utf8");
+  return readFileSync(fullPath(path), "utf8");
 }
 
 function exists(path: string) {
-  return existsSync(join(root, path));
+  return existsSync(fullPath(path));
 }
 
 function add(level: Finding["level"], message: string) {
@@ -67,7 +73,7 @@ function warnIfFrontmatterYamlLooksUnsafe(path: string, fm: string) {
 }
 
 function modifiedMs(path: string) {
-  return statSync(join(root, path)).mtimeMs;
+  return statSync(fullPath(path)).mtimeMs;
 }
 
 function sectionContent(content: string, heading: string) {
@@ -148,6 +154,7 @@ if (hotPathChars > 18000) {
 }
 
 const topicsIndex = exists("docs/TOPICS.md") ? read("docs/TOPICS.md") : "";
+const generatedIndex = exists("docs/.generated/context-index.md") ? read("docs/.generated/context-index.md") : "";
 const agents = exists("AGENTS.md") ? read("AGENTS.md") : "";
 const docsReadme = exists("docs/README.md") ? read("docs/README.md") : "";
 const docsKnowledge = exists("docs/topics/docs-knowledge-system.md")
@@ -191,6 +198,10 @@ if (exists("docs/topics/docs-knowledge-system.md") && !topicsIndex.includes("top
 
 if (exists(".pi/extensions") && !topicsIndex.includes("topics/pi-agentic-os.md")) {
   add("warn", ".pi/extensions exists but docs/topics/pi-agentic-os.md is not linked from docs/TOPICS.md");
+}
+
+if (existsSync(globalPiExtensionsDir) && !generatedIndex.includes("Global extensions:")) {
+  add("warn", "global Pi extensions exist but docs/.generated/context-index.md does not list them; run bun scripts/context-index.ts");
 }
 
 const topicFiles = exists("docs/topics")
@@ -355,6 +366,13 @@ if (!exists("docs/.generated/context-index.md")) {
         ? readdirSync(join(root, ".pi", "extensions"), { withFileTypes: true })
           .filter((entry) => entry.isFile() && entry.name.endsWith(".ts"))
           .map((entry) => `.pi/extensions/${entry.name}`)
+        : []
+    ),
+    ...(
+      existsSync(globalPiExtensionsDir)
+        ? readdirSync(globalPiExtensionsDir, { withFileTypes: true })
+          .filter((entry) => entry.isFile() && entry.name.endsWith(".ts"))
+          .map((entry) => join(globalPiExtensionsDir, entry.name))
         : []
     ),
     ...topicFiles.map((file) => `docs/topics/${file}`),

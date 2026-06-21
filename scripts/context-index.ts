@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
 const root = process.cwd();
@@ -145,9 +146,17 @@ const piExtensions = exists(".pi/extensions")
     .map((entry) => entry.name)
     .sort()
   : [];
+const globalPiExtensionsDir = join(homedir(), ".pi", "agent", "extensions");
+const globalPiExtensions = existsSync(globalPiExtensionsDir)
+  ? readdirSync(globalPiExtensionsDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".ts"))
+    .map((entry) => entry.name)
+    .sort()
+  : [];
 if (piPrompts.length) lines.push(`- Prompts: ${piPrompts.join(", ")}`);
-if (piExtensions.length) lines.push(`- Extensions: ${piExtensions.join(", ")}`);
-if (!piPrompts.length && !piExtensions.length) lines.push("- No project Pi resources found.");
+if (piExtensions.length) lines.push(`- Project extensions: ${piExtensions.join(", ")}`);
+if (globalPiExtensions.length) lines.push(`- Global extensions: ${globalPiExtensions.join(", ")}`);
+if (!piPrompts.length && !piExtensions.length && !globalPiExtensions.length) lines.push("- No Pi resources found.");
 lines.push("- Guidance: [pi-agentic-os](../topics/pi-agentic-os.md)");
 lines.push("");
 

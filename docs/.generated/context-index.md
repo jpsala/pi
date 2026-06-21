@@ -2,7 +2,7 @@
 
 Generated cache. Do not edit by hand.
 
-Generated: 2026-06-19T02:31:58.411Z
+Generated: 2026-06-21T21:35:19.878Z
 
 ## Topics
 
@@ -11,6 +11,7 @@ Generated: 2026-06-19T02:31:58.411Z
 - reference: [local-codex-skills](../topics/local-codex-skills.md) - skills, comandos locales, slash commands, docs/skills, .agents/skills
 - active: [os-quality](../topics/os-quality.md) - perfect os, dejar en condiciones, calidad agentica, docs livianos, optimizar contexto
 - reference: [pi-agentic-os](../topics/pi-agentic-os.md) - pi os, pi agentic os, os-sync, ask_user, /ask, /gol, /until-done
+- active: [windows-input-extension](../topics/windows-input-extension.md) - windows-input, seleccion pi, shift arrow, ctrl shift arrow, custom editor, extension input
 
 ## Tracks
 
@@ -31,7 +32,9 @@ Generated: 2026-06-19T02:31:58.411Z
 
 ## Pi Resources
 
-- No project Pi resources found.
+- Prompts: aos-cerrar, aos-checkpoint, aos-continuar-sesion, aos-fanout, aos-gol, aos-guardar-sesion, aos-help, aos-nueva-sesion-con-gol, aos-nueva-sesion, aos-orquestar, aos-sigamos, aos-siguiente
+- Project extensions: aos-checkpoint-nudge.ts, aos-tools.ts
+- Global extensions: windows-input.ts
 - Guidance: [pi-agentic-os](../topics/pi-agentic-os.md)
 
 ## Aliases
@@ -52,3 +55,4 @@ Generated: 2026-06-19T02:31:58.411Z
 | Gol Lite | Lote chico verificable sin `/until-done`. |
 | Guardar Sesion | Persistir valor durable en docs vivos. |
 | Nueva Sesion | Guardar y preparar handoff compacto para una sesion limpia. |
+| Windows Input | Extensión global `windows-input.ts` que reemplaza el prompt principal de Pi con selección/edición estilo Windows/VS Code. |

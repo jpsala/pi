@@ -10,6 +10,7 @@ Router liviano. Usar para decidir que abrir, no como lectura completa.
 | documentacion, topics, indice, working memory | [Sistema de conocimiento](topics/docs-knowledge-system.md) | Mantener docs livianos y recuperables. |
 | skills, comandos locales, .agents/skills | [Skills locales](topics/local-codex-skills.md) | `docs/skills/` canon y `.agents/skills` como junction/toggle. |
 | Pi, /os-sync, /ask, /gol, .pi | [Pi Agentic OS](topics/pi-agentic-os.md), [OS Playbook](OS_PLAYBOOK.md) | Adapter Pi opcional; instalar solo si aplica. |
+| windows-input, selección Pi, Shift+Arrow, Ctrl+Shift+Arrow | [Windows Input Extension](topics/windows-input-extension.md), [Pi Agentic OS](topics/pi-agentic-os.md) | Extensión global de input estilo Windows/VS Code para el prompt principal de Pi. |
 
 ## Documentos Raiz
 

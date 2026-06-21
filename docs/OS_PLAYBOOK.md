@@ -11,6 +11,7 @@ Guia corta para operar este workspace con Agentic OS.
 | Auditar/reparar OS | `realinear os` |
 | Dejar OS excelente | `perfect os` |
 | Actualizar desde kit canonico | `update os` |
+| Ver/controlar input estilo Windows en Pi | `/windows-input status`, `/windows-input on/off/toggle` |
 
 ## Sync Manual
 
@@ -20,4 +21,16 @@ bun scripts/context-index.ts
 bun scripts/agent-context-audit.ts
 ```
 
-Si se habilita Pi adapter en el futuro, documentar aca los comandos slash disponibles.
+## Pi Windows Input
+
+Extensión global documentada en `docs/topics/windows-input-extension.md`:
+
+```text
+/reload
+/windows-input status
+/windows-input on
+/windows-input off
+/windows-input toggle
+```
+
+Usar `/reload` en sesiones ya abiertas después de instalar o editar `C:\Users\jpsal\.pi\agent\extensions\windows-input.ts`.
