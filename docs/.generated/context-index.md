@@ -2,7 +2,7 @@
 
 Generated cache. Do not edit by hand.
 
-Generated: 2026-06-21T21:35:19.878Z
+Generated: 2026-06-21T22:38:56.617Z
 
 ## Topics
 
@@ -27,7 +27,7 @@ Generated: 2026-06-21T21:35:19.878Z
 ## Skills
 
 - Canon: [docs/skills/](../skills/)
-- Operational commands: adopt-os, align-os-project, aos-orquestar, evaluar-skills, gol-lite, guardar-sesion, init-os, nueva-sesion, nueva-sesion-con-gol, os-help, perfect-os, realinear-os, repo-commit-push, sigamos, update-os
+- Operational commands: adopt-os, align-os-project, aos-fanout, aos-orquestar, evaluar-skills, gol-lite, guardar-sesion, init-os, nueva-sesion, nueva-sesion-con-gol, os-help, perfect-os, realinear-os, repo-commit-push, sigamos, update-os
 - Guidance: [local-codex-skills](../topics/local-codex-skills.md)
 
 ## Pi Resources
