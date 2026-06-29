@@ -34,7 +34,8 @@ Atajos principales:
 - `Shift+Arrow`: extender seleccion.
 - `Ctrl+Shift+Left/Right`: extender seleccion por palabra.
 - `Shift+Home/End` y `Ctrl+Shift+Home/End`: seleccionar hasta limites de linea/documento.
-- `Ctrl+C` / `Ctrl+X`: copiar/cortar seleccion.
+- `Ctrl+C` / `Ctrl+X`: copiar/cortar selección; sin selección no limpian el editor.
+- `Ctrl+V`: intenta pegar texto del clipboard del sistema cuando Pi recibe la tecla; el pegado normal del terminal también funciona.
 - escribir, pegar, `Backspace` y `Delete`: reemplazan/eliminan seleccion.
 
 Comandos dentro de Pi:
@@ -113,9 +114,10 @@ La seleccion y edicion funcionan igual si el terminal entrega las teclas a Pi. L
 
 Clipboard:
 
-- Wayland: instalar `wl-clipboard` para `wl-copy`.
+- Wayland: instalar `wl-clipboard` para `wl-copy` / `wl-paste`.
 - X11: instalar `xclip`.
-- Si no estan instalados, la edicion/seleccion sigue funcionando, pero `Ctrl+C` / `Ctrl+X` pueden no copiar al clipboard del sistema.
+- En sesiones SSH/remotas, `Ctrl+C` usa OSC 52 cuando es posible para copiar al clipboard del terminal local. `Ctrl+V` normalmente depende de que el terminal pegue el texto hacia Pi; si Pi recibe literalmente `Ctrl+V`, solo puede leer clipboards accesibles desde la máquina donde corre Pi.
+- Si no estan instalados o el terminal no permite clipboard remoto, la edicion/seleccion sigue funcionando, pero copiar/pegar puede quedar limitado al terminal.
 
 Ejemplos:
 

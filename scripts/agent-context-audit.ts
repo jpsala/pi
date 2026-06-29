@@ -10,6 +10,11 @@ type Finding = {
 const root = process.cwd();
 const findings: Finding[] = [];
 const globalPiExtensionsDir = join(homedir(), ".pi", "agent", "extensions");
+const globalPiExtensionTsFiles = existsSync(globalPiExtensionsDir)
+  ? readdirSync(globalPiExtensionsDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".ts"))
+    .map((entry) => join(globalPiExtensionsDir, entry.name))
+  : [];
 
 function fullPath(path: string) {
   return isAbsolute(path) ? path : join(root, path);
@@ -271,7 +276,7 @@ if (exists("docs/topics/pi-agentic-os.md") && !topicsIndex.includes("topics/pi-a
   add("warn", "docs/topics/pi-agentic-os.md exists but is not linked from docs/TOPICS.md");
 }
 
-if (existsSync(globalPiExtensionsDir) && !generatedIndex.includes("Global extensions:")) {
+if (globalPiExtensionTsFiles.length && !generatedIndex.includes("Global extensions:")) {
   add("warn", "global Pi extensions exist but docs/.generated/context-index.md does not list them; run bun scripts/context-index.ts");
 }
 
@@ -487,13 +492,7 @@ if (!exists("docs/.generated/context-index.md")) {
           .map((entry) => `.pi/extensions/${entry.name}`)
         : []
     ),
-    ...(
-      existsSync(globalPiExtensionsDir)
-        ? readdirSync(globalPiExtensionsDir, { withFileTypes: true })
-          .filter((entry) => entry.isFile() && entry.name.endsWith(".ts"))
-          .map((entry) => join(globalPiExtensionsDir, entry.name))
-        : []
-    ),
+    ...globalPiExtensionTsFiles,
     ...topicFiles.map((file) => `docs/topics/${file}`),
     ...walkMarkdownFiles(join(root, "docs", "skills")).map((path) => relative(root, path).replaceAll("\\", "/")),
     ...trackMarkdown,

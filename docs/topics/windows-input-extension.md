@@ -54,8 +54,10 @@ Reemplaza el editor principal del prompt de Pi con un `CustomEditor` que agrega 
 - `Shift+Arrow`: extender selección.
 - `Ctrl+Shift+Left/Right`: extender selección por palabra.
 - `Shift+Home/End` y `Ctrl+Shift+Home/End`: seleccionar hasta límites de línea/documento.
-- `Ctrl+C`: copiar selección; si no hay selección, delega comportamiento normal.
-- `Ctrl+X`, `Backspace`, `Delete`, escritura y paste reemplazan selección.
+- `Ctrl+C`: copiar selección; si no hay selección, no limpia el editor.
+- `Ctrl+X`: cortar selección; si no hay selección, no limpia el editor.
+- `Ctrl+V`: intenta pegar texto del clipboard del sistema si Pi recibe la tecla; el paste normal del terminal también funciona.
+- `Backspace`, `Delete`, escritura y paste reemplazan selección.
 - Status footer `win-input` cuando está activo.
 
 ## Comandos
@@ -72,7 +74,7 @@ Reemplaza el editor principal del prompt de Pi con un `CustomEditor` que agrega 
 - Afecta el editor principal de prompts en modo TUI.
 - No convierte automáticamente inputs auxiliares, dialogs, selectores, overlays ni selección por mouse.
 - En Tabby requiere que Tabby no capture `Shift+Arrow` / `Ctrl+Shift+Arrow`; el workspace `C:\dev\tabby` ya documenta/libera esos hotkeys.
-- En Linux, `Ctrl+C` / `Ctrl+X` intentan copiar con `wl-copy` en Wayland o `xclip` en X11; sin esas utilidades, la selección funciona pero el clipboard puede no integrarse.
+- En Linux, `Ctrl+C` / `Ctrl+X` intentan copiar con helpers nativos y OSC 52 para sesiones remotas; `Ctrl+V` puede leer `wl-paste`, `xclip`/`xsel`, Termux o WSL/PowerShell cuando están disponibles. En SSH, pegar desde Windows normalmente depende de que el terminal envíe el paste a Pi.
 
 ## Instalar en otra PC
 

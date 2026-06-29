@@ -13,7 +13,7 @@
  * Toggle: /windows-input on|off|toggle|status
  */
 
-import { CustomEditor, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { CustomEditor, copyToClipboard, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {
 	CURSOR_MARKER,
 	decodeKittyPrintable,
@@ -83,25 +83,80 @@ function wrapLineWithPositions(line: string, contentWidth: number): Array<{ text
 	return chunks;
 }
 
-function copyTextSync(text: string): void {
-	const p = platform();
+function copyText(text: string): void {
+	// Pi's clipboard helper handles local native clipboards and OSC 52 for SSH/remote
+	// terminals. Fire-and-forget so editor input stays synchronous and non-fatal.
+	void copyToClipboard(text).catch(() => {
+		try {
+			const p = platform();
+			if (p === "win32") {
+				spawnSync("clip", { input: text, shell: true, stdio: ["pipe", "ignore", "ignore"] });
+				return;
+			}
+			if (p === "darwin") {
+				spawnSync("pbcopy", { input: text, stdio: ["pipe", "ignore", "ignore"] });
+				return;
+			}
+			if (process.env.WAYLAND_DISPLAY) {
+				const wl = spawnSync("wl-copy", { input: text, stdio: ["pipe", "ignore", "ignore"] });
+				if (wl.status === 0) return;
+			}
+			if (process.env.DISPLAY) {
+				spawnSync("xclip", ["-selection", "clipboard"], { input: text, stdio: ["pipe", "ignore", "ignore"] });
+			}
+		} catch {
+			// Keep editor behavior non-fatal if clipboard tooling is unavailable.
+		}
+	});
+}
+
+function readCommandStdout(command: string, args: string[], options: { shell?: boolean } = {}): string | null {
 	try {
-		if (p === "win32") {
-			spawnSync("clip", { input: text, shell: true, stdio: ["pipe", "ignore", "ignore"] });
-			return;
-		}
-		if (p === "darwin") {
-			spawnSync("pbcopy", { input: text, stdio: ["pipe", "ignore", "ignore"] });
-			return;
-		}
-		if (process.env.WAYLAND_DISPLAY) {
-			const wl = spawnSync("wl-copy", { input: text, stdio: ["pipe", "ignore", "ignore"] });
-			if (wl.status === 0) return;
-		}
-		spawnSync("xclip", ["-selection", "clipboard"], { input: text, stdio: ["pipe", "ignore", "ignore"] });
+		const result = spawnSync(command, args, {
+			timeout: 1000,
+			maxBuffer: 2 * 1024 * 1024,
+			encoding: "utf8",
+			shell: options.shell,
+			stdio: ["ignore", "pipe", "ignore"],
+		});
+		if (result.status !== 0 || typeof result.stdout !== "string") return null;
+		return result.stdout;
 	} catch {
-		// Keep editor behavior non-fatal if clipboard tooling is unavailable.
+		return null;
 	}
+}
+
+function isWSL(): boolean {
+	return Boolean(process.env.WSL_DISTRO_NAME || process.env.WSLENV);
+}
+
+function readClipboardTextSync(): string | null {
+	const p = platform();
+	if (p === "win32") {
+		return readCommandStdout("powershell.exe", ["-NoProfile", "-Command", "Get-Clipboard -Raw"]);
+	}
+	if (p === "darwin") {
+		return readCommandStdout("pbpaste", []);
+	}
+	if (process.env.TERMUX_VERSION) {
+		const termux = readCommandStdout("termux-clipboard-get", []);
+		if (termux !== null) return termux;
+	}
+	if (isWSL()) {
+		const powershell = readCommandStdout("powershell.exe", ["-NoProfile", "-Command", "Get-Clipboard -Raw"]);
+		if (powershell !== null) return powershell.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+	}
+	if (process.env.WAYLAND_DISPLAY) {
+		const wayland = readCommandStdout("wl-paste", ["--no-newline"]);
+		if (wayland !== null) return wayland;
+	}
+	if (process.env.DISPLAY) {
+		const xclip = readCommandStdout("xclip", ["-selection", "clipboard", "-o"]);
+		if (xclip !== null) return xclip;
+		const xsel = readCommandStdout("xsel", ["--clipboard", "--output"]);
+		if (xsel !== null) return xsel;
+	}
+	return null;
 }
 
 class WindowsInputEditor extends CustomEditor {
@@ -305,21 +360,31 @@ class WindowsInputEditor extends CustomEditor {
 
 		if (matchesKey(data, "ctrl+c")) {
 			const selected = this.selectedText();
-			if (selected) {
-				copyTextSync(selected);
-				return;
-			}
-			super.handleInput(data);
+			if (selected) copyText(selected);
+			// Windows-style text boxes do nothing when Ctrl+C has no selection.
 			return;
 		}
 
 		if (matchesKey(data, "ctrl+x")) {
 			const selected = this.selectedText();
 			if (selected) {
-				copyTextSync(selected);
+				copyText(selected);
 				this.deleteSelection();
+			}
+			// Windows-style text boxes do nothing when Ctrl+X has no selection.
+			return;
+		}
+
+		if (matchesKey(data, "ctrl+v")) {
+			const clipboardText = readClipboardTextSync();
+			if (clipboardText !== null && clipboardText.length > 0) {
+				if (!this.replaceSelection(clipboardText)) (this as any).insertTextAtCursor?.(clipboardText);
+				this.clearSelection();
+				this.tui.requestRender();
 				return;
 			}
+			// If text clipboard is unavailable, preserve Pi's default Ctrl+V action
+			// (Linux paste-image keybinding) or terminal-specific behavior.
 			super.handleInput(data);
 			return;
 		}

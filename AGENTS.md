@@ -30,7 +30,7 @@ No abrir docs largos ni crear estructura de producto hasta que el objetivo del w
 - `guardar sesion`: persistir valor durable en docs vivos sin handoff ni thread nuevo. `checkpoint` y `cerrar sesion` son aliases.
 - `nueva sesion`: guardar y preparar handoff compacto para thread nuevo. `continuar sesion` es alias legado.
 - `nueva sesion con gol`: nueva sesion que arranca con `gol`.
-- `realinear os`, `perfect os`, `init/adopt/update os`: usar `docs/topics/agentic-os-operations.md` y `docs/topics/os-quality.md`.
+- `realinear os` / `aos-realinear-os`, `perfect os`, `init/adopt/update os`: usar `docs/topics/agentic-os-operations.md` y `docs/topics/os-quality.md`.
 
 ## Comandos De Contexto
 
