@@ -21,16 +21,16 @@ Ultima actualizacion manual: 2026-06-21.
 - No se detecto stack, README de producto, scripts, datos ni deploy.
 - Adapter `.agents/skills` esta presente como symlink local ignorado por git.
 - Adapter Pi `.pi/` instalado localmente con prompts/comandos AOS y extensiones de soporte, copiado desde `jpsal@192.168.100.8` el 2026-06-20.
-- Extensión global `windows-input.ts` instalada en `C:\Users\jpsal\.pi\agent\extensions\windows-input.ts`: reemplaza el prompt principal de Pi con un `CustomEditor` estilo Windows/VS Code. Comandos: `/windows-input status|on|off|toggle`; usar `/reload` en sesiones abiertas.
+- Extensión global `windows-input.ts` instalada en `C:\Users\jpsal\.pi\agent\extensions\windows-input.ts`; copia fuente versionable en `pi-extensions/windows-input.ts`, instrucciones en `pi-extensions/README.md` e instaladores `scripts/install-windows-input.sh` / `scripts/install-windows-input.ps1`. Reemplaza el prompt principal de Pi con un `CustomEditor` estilo Windows/VS Code. Comandos: `/windows-input status|on|off|toggle`; usar `/reload` en sesiones abiertas.
 
 ## Riesgos
 
 - No inventar el proposito del workspace.
 - No agregar dependencias ni runtime externo sin confirmacion.
 - No guardar secretos ni datos sensibles.
-- `windows-input.ts` usa internals de Pi; si una actualización rompe selección/render, desactivar con `/windows-input off` o mover el archivo fuera de `~/.pi/agent/extensions/`.
+- `windows-input.ts` usa internals de Pi; si una actualización rompe selección/render, desactivar con `/windows-input off` o mover el archivo fuera de `~/.pi/agent/extensions/`. No es OS-specific: en Linux depende de que el terminal pase las teclas y de `wl-copy`/`xclip` para clipboard.
 - No duplicar `windows-input.ts` en `.pi/extensions/` mientras exista globalmente, para evitar comandos sufijados y doble reemplazo del editor.
 
 ## Proximo Paso Probable
 
-Probar manualmente la extensión global en una sesión Pi nueva o tras `/reload`: `/windows-input status`, `Ctrl+A`, `Shift+Arrow`, `Ctrl+Shift+Left/Right`, copy/cut/paste sobre selección.
+Si JP pide instalar `windows-input` en otra PC: abrir `docs/topics/windows-input-extension.md` y `pi-extensions/README.md`; ejecutar `scripts/install-windows-input.sh --global` en Linux/macOS/Git Bash o `./scripts/install-windows-input.ps1 -Scope Global` en PowerShell; luego pedir/ejecutar `/reload` en Pi y verificar `/windows-input status`.

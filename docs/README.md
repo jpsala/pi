@@ -26,6 +26,7 @@ No abrir todo `docs/` por defecto.
 - `topics/`: runbooks y how-tos recuperables.
 - `tracks/`: trabajo vivo retomable.
 - `skills/`: skills locales portables.
+- `../pi-extensions/README.md`: extensiones Pi portables e instalables en otras PCs.
 
 ## Regla
 
