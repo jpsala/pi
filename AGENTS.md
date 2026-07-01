@@ -21,16 +21,18 @@ No abrir docs largos ni crear estructura de producto hasta que el objetivo del w
 - La memoria durable vive en `docs/`; no usar chats como fuente de verdad.
 - Si aparecen archivos preexistentes de contexto, integrarlos, indexarlos, archivarlos o preguntar antes de borrarlos.
 - Limitar `init/adopt/update/perfect os` a la capa agentica salvo pedido explicito.
+- Para implementacion/review, `docs/topics/minimal-implementation.md` es politica liviana opcional: reusar lo existente y evitar dependencias/boilerplate innecesarios; Ponytail no es obligatorio ni dependencia local.
 
 ## Comandos AOS
 
 - `os help`: mostrar comandos OS disponibles y cuando usarlos.
 - `sigamos`: continuar en este hilo sin guardado obligatorio.
 - `gol` / `gol-lite`: ejecutar un lote chico verificable; no activa `/until-done` salvo pedido explicito.
-- `guardar sesion`: persistir valor durable en docs vivos sin handoff ni thread nuevo. `checkpoint` y `cerrar sesion` son aliases.
-- `nueva sesion`: guardar y preparar handoff compacto para thread nuevo. `continuar sesion` es alias legado.
+- `guardar sesion`: persistir valor durable en docs vivos sin handoff ni thread nuevo. `aos-checkpoint` y `aos-cerrar-sesion` son aliases.
+- `nueva sesion`: guardar y preparar handoff compacto para thread nuevo. `aos-continuar-sesion` es alias legado.
 - `nueva sesion con gol`: nueva sesion que arranca con `gol`.
 - `realinear os` / `aos-realinear-os`, `perfect os`, `init/adopt/update os`: usar `docs/topics/agentic-os-operations.md` y `docs/topics/os-quality.md`.
+- Skills/prompts canonicos usan prefijo `aos-*`; los nombres sin prefijo quedan como compatibilidad legacy cuando existan.
 
 ## Comandos De Contexto
 

@@ -12,6 +12,7 @@ Router liviano. Usar para decidir que abrir, no como lectura completa.
 | Pi, /os-sync, /ask, /gol, .pi | [Pi Agentic OS](topics/pi-agentic-os.md), [OS Playbook](OS_PLAYBOOK.md) | Adapter Pi opcional; instalar solo si aplica. |
 | pi-web, PI WEB, web UI Pi, usar Pi desde navegador, VPS Pi | [Pi Agentic OS](topics/pi-agentic-os.md#pi-web-en-vps) y `C:\dev\infra\docs\runbooks\vps-operations.md` | UI web remota de Pi en VPS; fuente operativa vive en `C:\dev\infra`. |
 | windows-input, selección Pi, Shift+Arrow, Ctrl+Shift+Arrow | [Windows Input Extension](topics/windows-input-extension.md), [Pi Agentic OS](topics/pi-agentic-os.md), [Pi Extensions README](../pi-extensions/README.md) | Extensión portable de input estilo Windows/VS Code para el prompt principal de Pi; incluye instaladores para otras PCs. |
+| implementación mínima, Ponytail, YAGNI, over-engineering | [Implementación mínima](topics/minimal-implementation.md) | Política liviana opcional subordinada a AOS; no instala dependencias. |
 
 ## Documentos Raiz
 

@@ -10,7 +10,8 @@ Guia corta para operar este workspace con Agentic OS.
 | Pasar a sesion limpia | `nueva sesion` |
 | Auditar/reparar OS | `realinear os` |
 | Dejar OS excelente | `perfect os` |
-| Actualizar desde kit canonico | `update os` |
+| Actualizar desde kit canonico | `update os` / `aos-update-os` |
+| Evitar over-engineering | `docs/topics/minimal-implementation.md` (politica liviana; Ponytail opcional, sin instalar dependencias) |
 | Ver/controlar input estilo Windows en Pi | `/windows-input status`, `/windows-input on/off/toggle` |
 
 ## Sync Manual

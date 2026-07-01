@@ -20,7 +20,8 @@ primary_refs:
 
 - `docs/skills/` es la fuente canonica versionada.
 - `.agents/skills` es compatibilidad tecnica por junction/toggle/symlink local.
-- Estado actual: `.agents/skills` existe como symlink local ignorado por git hacia `docs/skills/`.
+- Estado actual: `.agents/skills` es un adapter local ignorado por git y puede estar `disabled` (ausente) para reducir ruido en slash; habilitarlo con `scripts/ensure-skills-link.ps1`, `scripts/toggle-skills-link.ps1 on` o `/aos-skills on` si se necesita discovery.
+- Los comandos canonicos usan directorios `aos-*`; directorios historicos sin prefijo pueden quedar solo como compatibilidad hasta limpieza confirmada.
 - No duplicar skills en dos carpetas reales.
 
 ## Comandos

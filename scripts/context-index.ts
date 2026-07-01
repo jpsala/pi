@@ -124,10 +124,35 @@ const skillDirs = exists("docs/skills")
     .sort()
   : [];
 if (skillDirs.length) {
-  const nonCommandSkills = new Set(["impeccable"]);
-  const legacyAliasSkills = new Set(["checkpoint", "cerrar-sesion", "continuar-sesion", "continuar-sesion-con-gol"]);
+  const nonCommandSkills = new Set(["impeccable", "aos-impeccable"]);
+  const legacyAliasSkills = new Set([
+    "checkpoint",
+    "cerrar-sesion",
+    "continuar-sesion",
+    "continuar-sesion-con-gol",
+    "aos-checkpoint",
+    "aos-cerrar-sesion",
+    "aos-continuar-sesion",
+    "aos-continuar-sesion-con-gol",
+  ]);
+  const legacyUnprefixedSkills = new Set([
+    "adopt-os",
+    "align-os-project",
+    "evaluar-skills",
+    "gol-lite",
+    "guardar-sesion",
+    "init-os",
+    "nueva-sesion",
+    "nueva-sesion-con-gol",
+    "os-help",
+    "perfect-os",
+    "realinear-os",
+    "repo-commit-push",
+    "sigamos",
+    "update-os",
+  ]);
   const operationalSkills = skillDirs
-    .filter((skill) => !skill.startsWith("speckit-") && !nonCommandSkills.has(skill) && !legacyAliasSkills.has(skill))
+    .filter((skill) => !skill.startsWith("speckit-") && !skill.startsWith("aos-speckit-") && !nonCommandSkills.has(skill) && !legacyAliasSkills.has(skill) && !legacyUnprefixedSkills.has(skill))
     .filter((skill) => exists(`docs/skills/${skill}/SKILL.md`));
   lines.push("- Canon: [docs/skills/](../skills/)");
   if (operationalSkills.length) lines.push(`- Operational commands: ${operationalSkills.join(", ")}`);

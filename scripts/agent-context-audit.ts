@@ -21,6 +21,8 @@ function fullPath(path: string) {
 }
 
 const requiredAosPiPrompts = [
+  "aos-adopt-os.md",
+  "aos-align-os-project.md",
   "aos-cerrar.md",
   "aos-checkpoint.md",
   "aos-continuar-sesion.md",
@@ -28,11 +30,15 @@ const requiredAosPiPrompts = [
   "aos-gol.md",
   "aos-guardar-sesion.md",
   "aos-help.md",
+  "aos-init-os.md",
   "aos-nueva-sesion.md",
   "aos-nueva-sesion-con-gol.md",
   "aos-orquestar.md",
+  "aos-perfect-os.md",
+  "aos-realinear.md",
   "aos-sigamos.md",
   "aos-siguiente.md",
+  "aos-update-os.md",
 ];
 
 const requiredAosPiExtensions = [
@@ -43,9 +49,12 @@ const requiredAosPiExtensions = [
 const requiredAosToolCommands = [
   "aos-compact",
   "aos-continuar",
+  "aos-continuar-con-gol",
+  "aos-continuar-sesion",
   "aos-gol",
   "aos-nueva-sesion",
   "aos-nueva-sesion-con-gol",
+  "aos-siguiente",
   "aos-skills",
   "aos-status",
   "aos-sync",

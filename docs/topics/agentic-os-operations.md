@@ -28,6 +28,7 @@ Usar para crear, adoptar, actualizar o auditar la capa agentica de este workspac
 - No inventar proposito, stack, comandos, deploy ni datos.
 - Preservar memoria local; preguntar antes de borrar o reemplazar contenido dudoso.
 - Limitar cambios a la capa agentica salvo pedido explicito.
+- Aplicar `docs/topics/minimal-implementation.md` solo como politica liviana: traer el diff correcto mas chico y no instalar Ponytail/dependencias salvo pedido explicito.
 - Regenerar indice y correr audit despues de cambios OS.
 
 ## Init OS

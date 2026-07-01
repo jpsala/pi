@@ -5,12 +5,12 @@ description: Design or run an AOS orchestration fan-out with Pi threads/subagent
 
 # AOS Orquestar
 
-Usar threads/subagentes solo cuando aportan paralelismo real, son seguros, y el hilo principal puede seguir siendo el orquestador.
+Usar threads/subagentes solo cuando aportan paralelismo real, son seguros, y el hilo principal puede seguir siendo el orquestador. Si JP invoca `aos-fanout` o `/aos-fanout`, buscar activamente todos los frentes paralelizables seguros antes de empezar; si no hay, trabajar serial y decir por que.
 
 ## Flujo
 
-1. Leer la ruta minima del repo actual: `docs/.generated/context-index.md` si existe, `docs/WORKING_MEMORY.md` y el topic/track/spec puntual.
-2. Si existe `docs/topics/pi-agentic-os.md#orquestacion-con-threadssubagentes`, usarlo como politica local; si no existe, aplicar esta skill como politica suficiente.
+1. Leer la ruta minima: `docs/.generated/context-index.md`, `docs/WORKING_MEMORY.md` y el topic/track/spec puntual.
+2. Revisar `docs/topics/pi-agentic-os.md#orquestacion-con-threadssubagentes` como politica canonica.
 3. Nombrar el fan-out propuesto: objetivo, agentes, tipo (`explorer`, `worker`, `reviewer`), ownership y criterio de integracion.
 4. Si JP no pidio threads explicitamente, pedir confirmacion con `ask_user` antes de `spawn_agent`.
 5. Si JP lo pidio explicitamente, lanzar agentes directamente despues de una frase corta de plan.
