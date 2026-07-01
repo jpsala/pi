@@ -2,7 +2,7 @@
 
 Estado vivo del workspace `pi`. Mantener corto.
 
-Ultima actualizacion manual: 2026-06-21.
+Ultima actualizacion manual: 2026-07-01.
 
 ## Lectura Rapida
 
@@ -13,6 +13,7 @@ Ultima actualizacion manual: 2026-06-21.
 | Documentacion | active | `docs/topics/docs-knowledge-system.md` | Mantener ruta caliente chica e indice regenerado. |
 | Skills locales | available | `docs/topics/local-codex-skills.md` | `docs/skills/` es canon; `.agents/skills` existe como symlink local ignorado por git. |
 | Pi local | active | `docs/topics/pi-agentic-os.md` | Windows Pi alineado con `jpsal@192.168.100.8`; mantener `.pi/` y config global como capa agentica local. |
+| PI WEB VPS | active | `docs/topics/pi-agentic-os.md#pi-web-en-vps`, `C:\dev\infra\docs\runbooks\vps-operations.md` | Publicado en `https://pi.jpsala.dev` con Cloudflare Access `JP only`; SSH tunnel queda como fallback. |
 | Windows input | active | `docs/topics/windows-input-extension.md` | Probar `/windows-input status` y selección con `Shift+Arrow` / `Ctrl+Shift+Arrow` tras `/reload`. |
 
 ## Estado Actual
@@ -22,6 +23,7 @@ Ultima actualizacion manual: 2026-06-21.
 - Adapter `.agents/skills` esta presente como symlink local ignorado por git.
 - Adapter Pi `.pi/` instalado localmente con prompts/comandos AOS y extensiones de soporte, copiado desde `jpsal@192.168.100.8` el 2026-06-20.
 - Extensión global `windows-input.ts` instalada en `C:\Users\jpsal\.pi\agent\extensions\windows-input.ts`; copia fuente versionable en `pi-extensions/windows-input.ts`, instrucciones en `pi-extensions/README.md` e instaladores `scripts/install-windows-input.sh` / `scripts/install-windows-input.ps1`. Reemplaza el prompt principal de Pi con un `CustomEditor` estilo Windows/VS Code. Comandos: `/windows-input status|on|off|toggle`; usar `/reload` en sesiones abiertas.
+- PI WEB remoto debe consultarse en `C:\dev\infra`: VPS `vps`, servicios user `pi-web.service`/`pi-web-sessiond.service`, bind `127.0.0.1:8504`, publicado como `https://pi.jpsala.dev` con Cloudflare Access `JP only`; SSH tunnel queda como fallback.
 
 ## Riesgos
 

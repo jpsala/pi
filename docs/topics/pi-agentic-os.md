@@ -10,6 +10,10 @@ triggers:
   - /ask
   - /gol
   - /until-done
+  - pi-web
+  - pi web
+  - web ui pi
+  - vps pi web
 primary_refs:
   - docs/OS_PLAYBOOK.md
   - docs/topics/agentic-os-operations.md
@@ -85,3 +89,35 @@ Comandos de verificacion en VPS:
 ssh vps-cf-jpsal 'cd /home/jpsal/dev/pi && git status --short --branch && pi --version && bun scripts/agent-context-audit.ts && cm stats'
 ssh vps-cf-jpsal 'pi list | tail -40'
 ```
+
+## PI WEB En VPS
+
+Fuente de verdad operativa: `C:\dev\infra`, especialmente:
+
+- `C:\dev\infra\docs\WORKING_MEMORY.md`
+- `C:\dev\infra\docs\runbooks\vps-operations.md`
+- `C:\dev\infra\docs\runbooks\automations-agents.md#pi-web-en-vps`
+- `C:\dev\infra\docs\INVENTORY.md`
+
+Estado documentado en `infra` el 2026-07-01:
+
+- El paquete correcto para UI web remota de Pi es `@jmfederico/pi-web`; no confundir con `pi-web-access`, que solo agrega tools de búsqueda/fetch web para Pi.
+- PI WEB está instalado en el VPS como usuario `jpsal`, con paquete `@jmfederico/pi-web` versión `1.202606.7`.
+- Corre como servicios systemd user: `pi-web.service` y `pi-web-sessiond.service`.
+- Config remota: `/home/jpsal/.config/pi-web/config.json`.
+- Bind esperado/verificado: `127.0.0.1:8504` solamente. No exponer directo a internet ni mover a `0.0.0.0`.
+- Publicacion browser: `https://pi.jpsala.dev` via Cloudflare tunnel `constelaciones-pi-console` + Cloudflare Access app `PI WEB`, policy `JP only`.
+- Fallback desde Windows/local: `ssh -L 8504:127.0.0.1:8504 vps`, luego abrir `http://127.0.0.1:8504`.
+- Checks seguros:
+
+```bash
+ssh vps 'pi-web status'
+ssh vps 'pi-web doctor'
+ssh vps 'curl -fsS http://127.0.0.1:8504/api/pi-web/version'
+ssh vps 'ss -ltnp | grep 8504 || true'
+curl -I https://pi.jpsala.dev/
+curl -sS https://pi.jpsala.dev/.well-known/cloudflare-access-protected-resource/
+```
+
+Guardrail: cambiar PI WEB, su hostname, tunnel, reverse proxy, bind o Access policy requiere aprobación explícita porque la UI permite operar sesiones Pi con acceso a repos, comandos y credenciales del VPS.
+
