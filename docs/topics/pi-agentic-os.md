@@ -33,6 +33,7 @@ Configuracion global Pi de Windows alineada el 2026-06-20 con `jpsal@192.168.100
 - Recursos globales copiados: `AGENTS.md`, `keybindings.json`, `mcp.json`, `models.json`, `telegram.json`, configs de `pi-footer` y `pi-rtk-optimizer`, prompt `codex-usage`, tema `jp-tokyo-night-user-focus`.
 - `cm.exe` copiado a `~/.local/bin` y disponible en PATH.
 - Extensión global `windows-input.ts`: input principal estilo Windows/VS Code mediante `CustomEditor`; comandos `/windows-input status|on|off|toggle`; status footer `win-input`.
+- Statusline compacta de JP: ver `docs/topics/pi-statusline-customization.md`; snapshot `pi-extensions/pi-footer.json`; restaurar/replicar con `scripts/apply-pi-statusline-customization.ps1`.
 
 Repo remoto publico: `https://github.com/jpsala/pi`.
 

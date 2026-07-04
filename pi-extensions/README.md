@@ -24,6 +24,25 @@ El agente debe:
 4. Indicar que en Pi hay que ejecutar `/reload` si la sesion ya estaba abierta.
 5. Verificar dentro de Pi con `/windows-input status`.
 
+## Statusline compacta de JP
+
+Esta repo tambien guarda la configuracion compacta del footer/statusline de Pi:
+
+- Snapshot: `pi-extensions/pi-footer.json`
+- Restaurador Windows: `scripts/apply-pi-statusline-customization.ps1`
+- Guia: `docs/topics/pi-statusline-customization.md`
+
+El restaurador copia la config de `pi-footer` y reaplica parches locales en `pi-footer`, `pi-chrome` y `@calesennett/pi-codex-usage` para mantener `chrome:∞`, usage compacto y evitar el duplicado `Codex 5h NN% 7d NN%`.
+
+Para restaurarla o igualarla en otra PC Windows:
+
+```powershell
+./scripts/apply-pi-statusline-customization.ps1 -Status
+./scripts/apply-pi-statusline-customization.ps1
+```
+
+Luego ejecutar `/reload` dentro de Pi.
+
 ## `windows-input.ts`
 
 Editor principal del prompt de Pi con semantica estilo Windows/VS Code. No es especifico de Windows como sistema operativo; deberia funcionar en Windows, Linux y macOS si el terminal entrega las teclas a Pi.

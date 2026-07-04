@@ -2,7 +2,7 @@
 
 Generated cache. Do not edit by hand.
 
-Generated: 2026-07-01T22:43:00.346Z
+Generated: 2026-07-04T01:49:32.117Z
 
 ## Topics
 
@@ -12,6 +12,7 @@ Generated: 2026-07-01T22:43:00.346Z
 - active: [minimal-implementation](../topics/minimal-implementation.md) - ponytail, minimal implementation, implementacion minima, solucion minima, yagni, over-engineering, bloat, boilerplate
 - active: [os-quality](../topics/os-quality.md) - perfect os, dejar en condiciones, calidad agentica, docs livianos, optimizar contexto
 - reference: [pi-agentic-os](../topics/pi-agentic-os.md) - pi os, pi agentic os, os-sync, ask_user, /ask, /gol, /until-done, pi-web
+- active: [pi-statusline-customization](../topics/pi-statusline-customization.md) - pi footer, pi statusline, chrome status, codex usage, otra pc, actualizar extensiones
 - active: [windows-input-extension](../topics/windows-input-extension.md) - windows-input, seleccion pi, shift arrow, ctrl shift arrow, custom editor, extension input
 
 ## Tracks

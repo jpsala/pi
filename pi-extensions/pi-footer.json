@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "enabled": true,
+  "preset": "compact",
+  "separator": "dot",
+  "separatorFg": "pi:dim",
+  "separatorBg": "default",
+  "iconMode": "text",
+  "minimalist": false,
+  "terminal": {
+    "widthMode": "full",
+    "colorLevel": "truecolor"
+  },
+  "extensionStatusRow": {
+    "hiddenKeys": [
+      "chrome",
+      "codex-usage",
+      "codex-usage.compact",
+      "link",
+      "telegram",
+      "windows-input"
+    ],
+    "knownKeys": [
+      "chrome",
+      "codex-usage",
+      "codex-usage.compact",
+      "link",
+      "telegram",
+      "windows-input"
+    ]
+  },
+  "lines": [
+    [
+      {
+        "id": "jp-model",
+        "type": "model",
+        "enabled": true,
+        "options": {
+          "raw": true,
+          "fg": "pi:accent",
+          "bold": true
+        }
+      },
+      {
+        "id": "jp-thinking",
+        "type": "thinking-level",
+        "enabled": true,
+        "options": {
+          "icon": "think:",
+          "hideWhenEmpty": true,
+          "fg": "pi:thinkingHigh",
+          "bold": true
+        }
+      },
+      {
+        "id": "jp-cwd",
+        "type": "cwd-basename",
+        "enabled": true,
+        "options": {
+          "icon": "dir:",
+          "hideWhenEmpty": true,
+          "fg": "pi:muted"
+        }
+      },
+      {
+        "id": "jp-branch",
+        "type": "git-branch",
+        "enabled": true,
+        "options": {
+          "icon": "git:",
+          "hideWhenEmpty": true,
+          "fg": "pi:success",
+          "gitBranchDisplayStyle": "default"
+        }
+      },
+      {
+        "id": "jp-diff",
+        "type": "git-diff",
+        "enabled": true,
+        "options": {
+          "raw": true,
+          "gitDiffMode": "compact",
+          "hideWhenEmpty": true,
+          "fg": "pi:warning"
+        }
+      },
+      {
+        "id": "jp-context",
+        "type": "context",
+        "enabled": true,
+        "options": {
+          "icon": "ctx:",
+          "contextConditionalColors": true,
+          "warningFg": "pi:warning",
+          "dangerFg": "pi:error",
+          "fg": "pi:muted"
+        }
+      },
+      {
+        "id": "jp-window",
+        "type": "context-window",
+        "enabled": true,
+        "options": {
+          "raw": true,
+          "tokenFormatStyle": "compact",
+          "contextConditionalColors": true,
+          "warningFg": "pi:warning",
+          "dangerFg": "pi:error",
+          "fg": "pi:dim"
+        }
+      },
+      {
+        "id": "jp-cache",
+        "type": "cache-read",
+        "enabled": true,
+        "options": {
+          "icon": "cache:",
+          "tokenFormatStyle": "compact",
+          "hideWhenZero": true,
+          "fg": "pi:dim"
+        }
+      },
+      {
+        "id": "jp-flex",
+        "type": "flex-separator",
+        "enabled": false,
+        "options": {}
+      },
+      {
+        "id": "jp-link",
+        "type": "external-status",
+        "enabled": true,
+        "options": {
+          "externalStatusKey": "link",
+          "trimValue": 0,
+          "preserveTrimStyles": false,
+          "hideWhenEmpty": true,
+          "fg": "pi:dim"
+        }
+      },
+      {
+        "id": "jp-windows-input",
+        "type": "external-status",
+        "enabled": true,
+        "options": {
+          "externalStatusKey": "windows-input",
+          "trimValue": 0,
+          "preserveTrimStyles": false,
+          "hideWhenEmpty": true,
+          "fg": "pi:muted"
+        }
+      },
+      {
+        "id": "jp-chrome",
+        "type": "external-status",
+        "enabled": true,
+        "options": {
+          "externalStatusKey": "chrome",
+          "trimValue": 0,
+          "preserveTrimStyles": false,
+          "hideWhenEmpty": true,
+          "fg": "pi:success"
+        }
+      },
+      {
+        "id": "jp-codex-usage",
+        "type": "external-status",
+        "enabled": true,
+        "options": {
+          "externalStatusKey": "codex-usage.compact",
+          "trimValue": 0,
+          "preserveTrimStyles": false,
+          "hideWhenEmpty": true,
+          "icon": "usage:",
+          "fg": "pi:muted"
+        }
+      }
+    ]
+  ]
+}

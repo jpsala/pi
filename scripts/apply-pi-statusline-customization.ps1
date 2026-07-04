@@ -1,0 +1,187 @@
+param(
+  [switch]$Status,
+  [switch]$NoFooterConfig,
+  [switch]$NoPackagePatches
+)
+
+$ErrorActionPreference = "Stop"
+
+$RepoRoot = Split-Path -Parent $PSScriptRoot
+$AgentDir = if ($env:PI_CODING_AGENT_DIR) { $env:PI_CODING_AGENT_DIR } else { Join-Path $env:USERPROFILE ".pi\agent" }
+$FooterSource = Join-Path $RepoRoot "pi-extensions\pi-footer.json"
+$FooterTarget = Join-Path $AgentDir "extensions\pi-footer.json"
+$FooterPackageTarget = Join-Path $AgentDir "npm\node_modules\pi-footer\src\index.ts"
+$ChromeTarget = Join-Path $AgentDir "npm\node_modules\pi-chrome\extensions\chrome-profile-bridge\index.ts"
+$UsageTarget = Join-Path $AgentDir "npm\node_modules\@calesennett\pi-codex-usage\src\codex-usage\format.ts"
+$UsageExtensionTarget = Join-Path $AgentDir "npm\node_modules\@calesennett\pi-codex-usage\extensions\codex-usage-status.ts"
+
+function Show-Status {
+  Write-Host "Repo:         $RepoRoot"
+  Write-Host "Pi agent dir: $AgentDir"
+  Write-Host "Footer src:   $FooterSource"
+  Write-Host "Footer dst:   $FooterTarget"
+  Write-Host "pi-footer:    $FooterPackageTarget"
+  Write-Host "pi-chrome:    $ChromeTarget"
+  Write-Host "codex-usage:  $UsageTarget"
+  Write-Host "codex-ext:    $UsageExtensionTarget"
+  Write-Host ""
+  foreach ($path in @($FooterSource, $FooterTarget, $FooterPackageTarget, $ChromeTarget, $UsageTarget, $UsageExtensionTarget)) {
+    if (Test-Path $path) { Write-Host "ok      $path" } else { Write-Host "missing $path" }
+  }
+}
+
+function Backup-File([string]$Path) {
+  if (!(Test-Path $Path)) { return }
+  $backup = "$Path.bak-pi-statusline-$(Get-Date -Format yyyyMMdd-HHmmss)"
+  Copy-Item $Path $backup -Force
+  Write-Host "backup  $backup"
+}
+
+function Replace-Regex([string]$Path, [string]$Pattern, [string]$Replacement, [string]$Label) {
+  if (!(Test-Path $Path)) {
+    Write-Warning "$Label skipped: missing $Path"
+    return
+  }
+
+  $content = Get-Content $Path -Raw
+  $next = [regex]::Replace($content, $Pattern, $Replacement, 1)
+  if ($next -eq $content) {
+    Write-Warning "$Label unchanged: pattern not found or already equivalent in $Path"
+    return
+  }
+
+  Backup-File $Path
+  Set-Content -Path $Path -Value $next -NoNewline -Encoding UTF8
+  Write-Host "patched $Label"
+}
+
+function Install-FooterConfig {
+  if (!(Test-Path $FooterSource)) { throw "Missing source footer config: $FooterSource" }
+  New-Item -ItemType Directory -Force (Split-Path -Parent $FooterTarget) | Out-Null
+  if (Test-Path $FooterTarget) { Backup-File $FooterTarget }
+  Copy-Item $FooterSource $FooterTarget -Force
+  Write-Host "copied  pi-footer config"
+}
+
+function Patch-PiFooterPackage {
+  $mapReplacement = @'
+          )
+            .map((entry) => entry.value)
+            .filter((value) => !isDuplicateCodexUsageStatus(value));
+          const renderedLines = lines.map((line) => truncateToWidth(line, width, "…"));
+'@
+  $helperReplacement = @'
+function isDuplicateCodexUsageStatus(value: string): boolean {
+  return /^Codex(?: Spark)?\s+5h\s+\d+%\s+7d\s+\d+%/.test(stripAnsi(value));
+}
+
+function stripAnsi(value: string): string {
+  // oxlint-disable-next-line no-control-regex
+  return value.replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, "");
+}
+
+function collectStatuslineData(
+'@
+
+  Replace-Regex $FooterPackageTarget '(?s)\)\.map\(\(entry\) => entry\.value\);\r?\n\s+const renderedLines = lines\.map\(\(line\) => truncateToWidth\(line, width, "…"\)\);|\)\r?\n\s+\.map\(\(entry\) => entry\.value\)\r?\n\s+\.filter\(\(value\) => !isDuplicateCodexUsageStatus\(value\)\);\r?\n\s+const renderedLines = lines\.map\(\(line\) => truncateToWidth\(line, width, "…"\)\);' $mapReplacement "pi-footer filter duplicate Codex usage row"
+  Replace-Regex $FooterPackageTarget '(?s)(?:function isDuplicateCodexUsageStatus\(value: string\): boolean \{.*?\r?\n\}\r?\n\r?\nfunction stripAnsi\(value: string\): string \{.*?\r?\n\}\r?\n\r?\n)?function collectStatuslineData\(' $helperReplacement "pi-footer duplicate Codex usage helper"
+}
+
+function Patch-PiChrome {
+  $authReplacement = @'
+	const authCountdownLabel = (): string => {
+		if (chromeAuthorizedUntil === "indefinite") return ":∞";
+		if (typeof chromeAuthorizedUntil === "number") {
+			const remainingMs = chromeAuthorizedUntil - Date.now();
+			if (remainingMs > 0) {
+				const mins = Math.ceil(remainingMs / 60_000);
+				return mins >= 1 ? `:${mins}m` : ":<1m";
+			}
+		}
+		return "";
+	};
+'@
+
+  $statusReplacement = @'
+	const updateChromeStatus = (ctx: ExtensionContext): void => {
+		if (chromeControlAuthorized()) {
+			ctx.ui.setStatus("chrome", ctx.ui.theme.fg("success", "chrome" + authCountdownLabel()));
+		} else {
+			ctx.ui.setStatus("chrome", undefined);
+		}
+	};
+'@
+
+  Replace-Regex $ChromeTarget '(?s)\tconst authCountdownLabel = \(\): string => \{.*?\r?\n\t\};' $authReplacement "pi-chrome compact auth label"
+  Replace-Regex $ChromeTarget '(?s)\tconst updateChromeStatus = \(ctx: ExtensionContext\): void => \{.*?\r?\n\t\};' $statusReplacement "pi-chrome compact status"
+}
+
+function Patch-CodexUsageExtension {
+  $refreshReplacement = @'
+			this.lastUsage = usage;
+			ctx.ui.setStatus(EXTENSION_ID, "");
+			ctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, usage, this.preferences));
+'@
+  $renderLastReplacement = @'
+		ctx.ui.setStatus(EXTENSION_ID, "");
+		ctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, this.lastUsage, this.preferences));
+'@
+
+  Replace-Regex $UsageExtensionTarget '(?s)\t\t\tthis\.lastUsage = usage;\r?\n\t\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, usage, this\.preferences, modelId\)|undefined|"")\);\r?\n\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, usage, this\.preferences\)\);' $refreshReplacement "codex-usage hide full status refresh"
+  Replace-Regex $UsageExtensionTarget '(?s)\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, this\.lastUsage, this\.preferences, ctx\.model\?\.id\)|undefined|"")\);\r?\n\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, this\.lastUsage, this\.preferences\)\);' $renderLastReplacement "codex-usage hide full status renderLast"
+}
+
+function Patch-CodexUsage {
+  Patch-CodexUsageExtension
+
+  $percentReplacement = @'
+function formatPercent(theme: Theme, leftPercent: number | null, mode: PercentMode): string {
+	if (leftPercent === null) return theme.fg("muted", "--");
+
+	const color = leftPercent <= 10 ? "error" : leftPercent <= 25 ? "warning" : "success";
+	const displayed = mode === "left" ? leftPercent : 100 - leftPercent;
+	return theme.fg(color, `${Math.round(displayed)}% ${mode}`);
+}
+
+function formatCompactPercent(theme: Theme, leftPercent: number | null, mode: PercentMode): string {
+	if (leftPercent === null) return theme.fg("muted", "--");
+
+	const color = leftPercent <= 10 ? "error" : leftPercent <= 25 ? "warning" : "success";
+	const displayed = mode === "left" ? leftPercent : 100 - leftPercent;
+	return theme.fg(color, `${Math.round(displayed)}%`);
+}
+
+function formatCountdown
+'@
+
+  $compactReplacement = @'
+export function formatCompactStatus(ctx: ExtensionContext, usage: UsageSnapshot, preferences: Preferences): string {
+	const theme = ctx.ui.theme;
+	const separator = theme.fg("dim", " · ");
+	const usageText = windowNames
+		.map(name => `${theme.fg("dim", `${name}:`)}${formatCompactPercent(theme, usage.leftPercent[name], preferences.usageMode)}`)
+		.join(separator);
+	const reset = formatCountdown(usage.resetInSeconds[preferences.refreshWindow]);
+	const resetText = reset ? `${separator}${theme.fg("dim", `↺${preferences.refreshWindow}:${reset}`)}` : "";
+	return `${usageText}${resetText}`;
+}
+'@
+
+  Replace-Regex $UsageTarget '(?s)function formatPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n(?:function formatCompactPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n)?function formatCountdown' $percentReplacement "codex-usage compact percent"
+  Replace-Regex $UsageTarget '(?s)export function formatCompactStatus\(ctx: ExtensionContext, usage: UsageSnapshot, preferences: Preferences\): string \{.*?\r?\n\}' $compactReplacement "codex-usage compact status"
+}
+
+if ($Status) {
+  Show-Status
+  exit 0
+}
+
+if (!$NoFooterConfig) { Install-FooterConfig }
+if (!$NoPackagePatches) {
+  Patch-PiFooterPackage
+  Patch-PiChrome
+  Patch-CodexUsage
+}
+
+Write-Host ""
+Write-Host "Next step inside Pi: /reload"
