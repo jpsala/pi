@@ -297,7 +297,9 @@ usage_compact_replacement = '''export function formatCompactStatus(ctx: Extensio
 \tconst reset = formatCountdown(usage.resetInSeconds[preferences.refreshWindow]);
 \tconst resetText = reset ? `${separator}${theme.fg("dim", `↺${preferences.refreshWindow}:${reset}`)}` : "";
 \treturn `${usageText}${resetText}`;
-}'''
+}
+
+export function unavailableStatus'''
 replace_regex(
     usage,
     r'''function formatPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n(?:function formatCompactPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n)?function formatCountdown''',
@@ -306,7 +308,7 @@ replace_regex(
 )
 replace_regex(
     usage,
-    r'''export function formatCompactStatus\(ctx: ExtensionContext, usage: UsageSnapshot, preferences: Preferences\): string \{.*?\r?\n\}''',
+    r'''(?:export function formatCompactStatus\(ctx: ExtensionContext, usage: UsageSnapshot, preferences: Preferences\): string \{.*?\r?\n\}\r?\n\r?\n)?export function unavailableStatus''',
     usage_compact_replacement,
     "codex-usage compact status",
 )

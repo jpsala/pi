@@ -227,10 +227,12 @@ export function formatCompactStatus(ctx: ExtensionContext, usage: UsageSnapshot,
 	const resetText = reset ? `${separator}${theme.fg("dim", `↺${preferences.refreshWindow}:${reset}`)}` : "";
 	return `${usageText}${resetText}`;
 }
+
+export function unavailableStatus
 '@
 
   Replace-Regex $UsageTarget '(?s)function formatPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n(?:function formatCompactPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n)?function formatCountdown' $percentReplacement "codex-usage compact percent"
-  Replace-Regex $UsageTarget '(?s)export function formatCompactStatus\(ctx: ExtensionContext, usage: UsageSnapshot, preferences: Preferences\): string \{.*?\r?\n\}' $compactReplacement "codex-usage compact status"
+  Replace-Regex $UsageTarget '(?s)(?:export function formatCompactStatus\(ctx: ExtensionContext, usage: UsageSnapshot, preferences: Preferences\): string \{.*?\r?\n\}\r?\n\r?\n)?export function unavailableStatus' $compactReplacement "codex-usage compact status"
 }
 
 if ($Status) {
