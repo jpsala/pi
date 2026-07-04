@@ -15,7 +15,7 @@ Ultima actualizacion manual: 2026-07-03.
 | Pi local | active | `docs/topics/pi-agentic-os.md` | Windows Pi alineado con `jpsal@192.168.100.8`; mantener `.pi/` y config global como capa agentica local. |
 | PI WEB VPS | active | `docs/topics/pi-agentic-os.md#pi-web-en-vps`, `C:\dev\infra\docs\runbooks\vps-operations.md` | Publicado en `https://pi.jpsala.dev` con Cloudflare Access `JP only`; SSH tunnel queda como fallback. |
 | Windows input | active | `docs/topics/windows-input-extension.md` | Probar `/windows-input status` y selección con `Shift+Arrow` / `Ctrl+Shift+Arrow` tras `/reload`. |
-| Pi statusline | active | `docs/topics/pi-statusline-customization.md` | Config compacta guardada en `pi-extensions/pi-footer.json`; restaurar/replicar con `scripts/apply-pi-statusline-customization.ps1`. |
+| Pi statusline | active | `docs/topics/pi-statusline-customization.md` | Config compacta guardada en `pi-extensions/pi-footer.json`; restaurar/replicar con `scripts/apply-pi-statusline-customization.ps1` (Windows) o `.sh` (Linux/VPS). |
 
 ## Estado Actual
 
@@ -24,7 +24,7 @@ Ultima actualizacion manual: 2026-07-03.
 - Adapter `.agents/skills` esta presente como symlink local ignorado por git.
 - Adapter Pi `.pi/` instalado localmente con prompts/comandos AOS y extensiones de soporte, copiado desde `jpsal@192.168.100.8` el 2026-06-20.
 - Extensión global `windows-input.ts` instalada en `C:\Users\jpsal\.pi\agent\extensions\windows-input.ts`; copia fuente versionable en `pi-extensions/windows-input.ts`, instrucciones en `pi-extensions/README.md` e instaladores `scripts/install-windows-input.sh` / `scripts/install-windows-input.ps1`. Reemplaza el prompt principal de Pi con un `CustomEditor` estilo Windows/VS Code. Comandos: `/windows-input status|on|off|toggle`; usar `/reload` en sesiones abiertas.
-- Statusline compacta de JP guardada: `pi-extensions/pi-footer.json`, topic `docs/topics/pi-statusline-customization.md`, restaurador `scripts/apply-pi-statusline-customization.ps1`. Incluye parches locales para `pi-footer` (filtra duplicado `Codex 5h NN% 7d NN%`), `pi-chrome` (`chrome:∞`) y `pi-codex-usage` (`5h:86% · 7d:33% · ↺7d:3d0h`, sin publicar el status completo duplicado). Validado en `C:\dev\dictation-tauri`: queda `LSP Failed: rust` sin duplicar Codex. Reaplicar tras actualizar extensiones y luego `/reload`.
+- Statusline compacta de JP guardada: `pi-extensions/pi-footer.json`, topic `docs/topics/pi-statusline-customization.md`, restauradores `scripts/apply-pi-statusline-customization.ps1` / `.sh`. Incluye parches locales para `pi-footer` (filtra duplicado `Codex 5h NN% 7d NN%`), `pi-chrome` (`chrome:∞`) y `pi-codex-usage` (`5h:86% · 7d:33% · ↺7d:3d0h`, sin publicar el status completo duplicado). Validado en `C:\dev\dictation-tauri`; aplicar tambien en VPS con script `.sh`. Reaplicar tras actualizar extensiones y luego `/reload`.
 - PI WEB remoto debe consultarse en `C:\dev\infra`: VPS `vps`, servicios user `pi-web.service`/`pi-web-sessiond.service`, bind `127.0.0.1:8504`, publicado como `https://pi.jpsala.dev` con Cloudflare Access `JP only`; SSH tunnel queda como fallback.
 
 ## Riesgos

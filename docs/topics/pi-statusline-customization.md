@@ -12,6 +12,7 @@ triggers:
 primary_refs:
   - ../../pi-extensions/pi-footer.json
   - ../../scripts/apply-pi-statusline-customization.ps1
+  - ../../scripts/apply-pi-statusline-customization.sh
 ---
 
 # Pi Statusline Customization
@@ -36,7 +37,8 @@ gpt-5.5 • think:medium • dir:pi • git:main • (+0,-0) • ctx:30.6% • 2
 ## Archivos canonicos en este repo
 
 - `pi-extensions/pi-footer.json`: snapshot versionable de `~/.pi/agent/extensions/pi-footer.json`.
-- `scripts/apply-pi-statusline-customization.ps1`: aplica la config y parches locales en una instalacion de Pi.
+- `scripts/apply-pi-statusline-customization.ps1`: aplica la config y parches locales en una instalacion Windows de Pi.
+- `scripts/apply-pi-statusline-customization.sh`: aplica lo mismo en Linux/macOS, incluyendo VPS.
 
 ## Instalacion / restauracion
 
@@ -45,6 +47,13 @@ Desde la raiz de este repo en Windows PowerShell:
 ```powershell
 ./scripts/apply-pi-statusline-customization.ps1 -Status
 ./scripts/apply-pi-statusline-customization.ps1
+```
+
+En Linux/macOS/VPS:
+
+```bash
+scripts/apply-pi-statusline-customization.sh --status
+scripts/apply-pi-statusline-customization.sh
 ```
 
 Luego, dentro de Pi:
@@ -158,6 +167,13 @@ Una actualizacion de `pi-chrome`, `pi-footer` o `pi-codex-usage` puede pisar los
 ./scripts/apply-pi-statusline-customization.ps1
 ```
 
+En VPS/Linux:
+
+```bash
+scripts/apply-pi-statusline-customization.sh --status
+scripts/apply-pi-statusline-customization.sh
+```
+
 Si el script avisa que un patron no aparece, abrir el archivo upstream y adaptar el parche manualmente; no forzar reemplazos ciegos.
 
 ## Diagnostico rapido
@@ -169,6 +185,8 @@ Si vuelve a aparecer una segunda linea con `Codex ...`:
 
    ```powershell
    ./scripts/apply-pi-statusline-customization.ps1
+   # o en Linux/VPS:
+   scripts/apply-pi-statusline-customization.sh
    ```
 
 3. Si persiste, revisar si `pi-footer/src/index.ts` conserva el helper `isDuplicateCodexUsageStatus`.

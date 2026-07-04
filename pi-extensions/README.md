@@ -30,6 +30,7 @@ Esta repo tambien guarda la configuracion compacta del footer/statusline de Pi:
 
 - Snapshot: `pi-extensions/pi-footer.json`
 - Restaurador Windows: `scripts/apply-pi-statusline-customization.ps1`
+- Restaurador Linux/macOS/VPS: `scripts/apply-pi-statusline-customization.sh`
 - Guia: `docs/topics/pi-statusline-customization.md`
 
 El restaurador copia la config de `pi-footer` y reaplica parches locales en `pi-footer`, `pi-chrome` y `@calesennett/pi-codex-usage` para mantener `chrome:∞`, usage compacto y evitar el duplicado `Codex 5h NN% 7d NN%`.
@@ -39,6 +40,13 @@ Para restaurarla o igualarla en otra PC Windows:
 ```powershell
 ./scripts/apply-pi-statusline-customization.ps1 -Status
 ./scripts/apply-pi-statusline-customization.ps1
+```
+
+En Linux/macOS/VPS:
+
+```bash
+scripts/apply-pi-statusline-customization.sh --status
+scripts/apply-pi-statusline-customization.sh
 ```
 
 Luego ejecutar `/reload` dentro de Pi.
