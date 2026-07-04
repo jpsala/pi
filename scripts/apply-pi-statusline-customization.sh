@@ -121,7 +121,7 @@ def replace_regex(path_value: str, pattern: str, replacement: str, label: str) -
         print(f"warning {label} skipped: missing {path}")
         return
     content = path.read_text(encoding="utf-8")
-    next_content, count = re.subn(pattern, replacement, content, count=1, flags=re.S)
+    next_content, count = re.subn(pattern, lambda _match: replacement, content, count=1, flags=re.S)
     if count == 0 or next_content == content:
         print(f"warning {label} unchanged: pattern not found or already equivalent in {path}")
         return
