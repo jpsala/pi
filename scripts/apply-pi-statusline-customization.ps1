@@ -125,35 +125,72 @@ const EXTENSION_ID = "codex-usage";
 const COMPACT_EXTENSION_ID = `${EXTENSION_ID}.compact`;
 '@
   $stopReplacement = @'
-ctx.ui.setStatus(EXTENSION_ID, undefined);
+	private stop(ctx: ExtensionContext): void {
+		if (this.timer) clearInterval(this.timer);
+		this.timer = undefined;
+		this.queued = undefined;
+		this.ctx = undefined;
+		this.generation++;
+		if (ctx.hasUI) {
+			ctx.ui.setStatus(EXTENSION_ID, undefined);
 			ctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
-'@
-  $missingAuthReplacement = @'
-this.lastUsage = undefined;
-				ctx.ui.setStatus(EXTENSION_ID, undefined);
-				ctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
-'@
-  $unavailableReplacement = @'
-ctx.ui.setStatus(EXTENSION_ID, unavailableStatus(ctx, modelId));
-				ctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
+		}
+	}
+
+	private enqueuePreferenceOperation
 '@
   $refreshReplacement = @'
+	private async refresh(ctx = this.ctx, modelId = ctx?.model?.id, generation = this.generation): Promise<void> {
+		if (!ctx?.hasUI || !this.isCurrent(generation)) return;
+
+		if (this.inFlight) {
+			this.queued = { ctx, generation, modelId };
+			return;
+		}
+
+		this.inFlight = true;
+		try {
+			const usage = await getUsage(modelId);
+			if (!this.isCurrent(generation)) return;
 			this.lastUsage = usage;
 			ctx.ui.setStatus(EXTENSION_ID, "");
 			ctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, usage, this.preferences));
+		} catch (error) {
+			if (!this.isCurrent(generation)) return;
+			if (errorMessage(error).includes(MISSING_AUTH_ERROR)) {
+				this.lastUsage = undefined;
+				ctx.ui.setStatus(EXTENSION_ID, undefined);
+				ctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
+			} else {
+				ctx.ui.setStatus(EXTENSION_ID, unavailableStatus(ctx, modelId));
+				ctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
+			}
+		} finally {
+			this.inFlight = false;
+			const queued = this.queued;
+			this.queued = undefined;
+			if (queued && this.isCurrent(queued.generation)) void this.refresh(queued.ctx, queued.modelId, queued.generation);
+		}
+	}
+
+	private renderLast
 '@
   $renderLastReplacement = @'
+	private renderLast(ctx: ExtensionContext): boolean {
+		if (!ctx.hasUI || !this.lastUsage) return false;
 		ctx.ui.setStatus(EXTENSION_ID, "");
 		ctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, this.lastUsage, this.preferences));
+		return true;
+	}
+
+	private savePreferences
 '@
 
   Replace-Regex $UsageExtensionTarget 'import \{ (?:formatCompactStatus, )?formatStatus, unavailableStatus \} from "\.\./src/codex-usage/format";' $importReplacement "codex-usage import compact formatter"
   Replace-Regex $UsageExtensionTarget 'const EXTENSION_ID = "codex-usage";\r?\n(?:const COMPACT_EXTENSION_ID = `\$\{EXTENSION_ID\}\.compact`;\r?\n)?' $constReplacement "codex-usage compact status key"
-  Replace-Regex $UsageExtensionTarget 'ctx\.ui\.setStatus\(EXTENSION_ID, undefined\);\r?\n(?:\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, undefined\);\r?\n)?' $stopReplacement "codex-usage clear compact status on stop"
-  Replace-Regex $UsageExtensionTarget 'this\.lastUsage = undefined;\r?\n\t\t\t\tctx\.ui\.setStatus\(EXTENSION_ID, undefined\);\r?\n(?:\t\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, undefined\);\r?\n)?' $missingAuthReplacement "codex-usage clear compact status on missing auth"
-  Replace-Regex $UsageExtensionTarget 'ctx\.ui\.setStatus\(EXTENSION_ID, unavailableStatus\(ctx, modelId\)\);\r?\n(?:\t\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, undefined\);\r?\n)?' $unavailableReplacement "codex-usage clear compact status on unavailable"
-  Replace-Regex $UsageExtensionTarget '(?s)\t\t\tthis\.lastUsage = usage;\r?\n\t\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, usage, this\.preferences, modelId\)|undefined|"")\);\r?\n(?:\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, usage, this\.preferences\)\);\r?\n)?' $refreshReplacement "codex-usage hide full status refresh"
-  Replace-Regex $UsageExtensionTarget '(?s)\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, this\.lastUsage, this\.preferences, ctx\.model\?\.id\)|undefined|"")\);\r?\n(?:\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, this\.lastUsage, this\.preferences\)\);\r?\n)?' $renderLastReplacement "codex-usage hide full status renderLast"
+  Replace-Regex $UsageExtensionTarget '(?s)\tprivate stop\(ctx: ExtensionContext\): void \{.*?\r?\n\t\}\r?\n\r?\n\tprivate enqueuePreferenceOperation' $stopReplacement "codex-usage stop clears compact status"
+  Replace-Regex $UsageExtensionTarget '(?s)\tprivate async refresh\(ctx = this\.ctx, modelId = ctx\?\.model\?\.id, generation = this\.generation\): Promise<void> \{.*?\r?\n\t\}\r?\n\r?\n\tprivate renderLast' $refreshReplacement "codex-usage compact refresh method"
+  Replace-Regex $UsageExtensionTarget '(?s)\tprivate renderLast\(ctx: ExtensionContext\): boolean \{.*?\r?\n\t\}\r?\n\r?\n\tprivate savePreferences' $renderLastReplacement "codex-usage compact renderLast method"
 }
 
 function Patch-CodexUsage {

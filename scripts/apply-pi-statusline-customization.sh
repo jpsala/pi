@@ -185,18 +185,61 @@ replace_regex(chrome, r'''\tconst updateChromeStatus = \(ctx: ExtensionContext\)
 usage_ext_import_replacement = '''import { formatCompactStatus, formatStatus, unavailableStatus } from "../src/codex-usage/format";'''
 usage_ext_const_replacement = '''const EXTENSION_ID = "codex-usage";
 const COMPACT_EXTENSION_ID = `${EXTENSION_ID}.compact`;'''
-usage_ext_stop_replacement = '''ctx.ui.setStatus(EXTENSION_ID, undefined);
-\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);'''
-usage_ext_missing_auth_replacement = '''this.lastUsage = undefined;
-\t\t\t\tctx.ui.setStatus(EXTENSION_ID, undefined);
-\t\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);'''
-usage_ext_unavailable_replacement = '''ctx.ui.setStatus(EXTENSION_ID, unavailableStatus(ctx, modelId));
-\t\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);'''
-usage_ext_refresh_replacement = '''\t\t\tthis.lastUsage = usage;
+usage_ext_stop_replacement = '''\tprivate stop(ctx: ExtensionContext): void {
+\t\tif (this.timer) clearInterval(this.timer);
+\t\tthis.timer = undefined;
+\t\tthis.queued = undefined;
+\t\tthis.ctx = undefined;
+\t\tthis.generation++;
+\t\tif (ctx.hasUI) {
+\t\t\tctx.ui.setStatus(EXTENSION_ID, undefined);
+\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
+\t\t}
+\t}
+
+\tprivate enqueuePreferenceOperation'''
+usage_ext_refresh_replacement = '''\tprivate async refresh(ctx = this.ctx, modelId = ctx?.model?.id, generation = this.generation): Promise<void> {
+\t\tif (!ctx?.hasUI || !this.isCurrent(generation)) return;
+
+\t\tif (this.inFlight) {
+\t\t\tthis.queued = { ctx, generation, modelId };
+\t\t\treturn;
+\t\t}
+
+\t\tthis.inFlight = true;
+\t\ttry {
+\t\t\tconst usage = await getUsage(modelId);
+\t\t\tif (!this.isCurrent(generation)) return;
+\t\t\tthis.lastUsage = usage;
 \t\t\tctx.ui.setStatus(EXTENSION_ID, "");
-\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, usage, this.preferences));'''
-usage_ext_render_replacement = '''\t\tctx.ui.setStatus(EXTENSION_ID, "");
-\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, this.lastUsage, this.preferences));'''
+\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, usage, this.preferences));
+\t\t} catch (error) {
+\t\t\tif (!this.isCurrent(generation)) return;
+\t\t\tif (errorMessage(error).includes(MISSING_AUTH_ERROR)) {
+\t\t\t\tthis.lastUsage = undefined;
+\t\t\t\tctx.ui.setStatus(EXTENSION_ID, undefined);
+\t\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
+\t\t\t} else {
+\t\t\t\tctx.ui.setStatus(EXTENSION_ID, unavailableStatus(ctx, modelId));
+\t\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
+\t\t\t}
+\t\t} finally {
+\t\t\tthis.inFlight = false;
+\t\t\tconst queued = this.queued;
+\t\t\tthis.queued = undefined;
+\t\t\tif (queued && this.isCurrent(queued.generation)) void this.refresh(queued.ctx, queued.modelId, queued.generation);
+\t\t}
+\t}
+
+\tprivate renderLast'''
+usage_ext_render_replacement = '''\tprivate renderLast(ctx: ExtensionContext): boolean {
+\t\tif (!ctx.hasUI || !this.lastUsage) return false;
+\t\tctx.ui.setStatus(EXTENSION_ID, "");
+\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, this.lastUsage, this.preferences));
+\t\treturn true;
+\t}
+
+\tprivate savePreferences'''
 replace_regex(
     usage_ext,
     r'''import \{ (?:formatCompactStatus, )?formatStatus, unavailableStatus \} from "\.\./src/codex-usage/format";''',
@@ -211,33 +254,21 @@ replace_regex(
 )
 replace_regex(
     usage_ext,
-    r'''ctx\.ui\.setStatus\(EXTENSION_ID, undefined\);\r?\n(?:\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, undefined\);\r?\n)?''',
-    usage_ext_stop_replacement + "\n",
-    "codex-usage clear compact status on stop",
+    r'''\tprivate stop\(ctx: ExtensionContext\): void \{.*?\r?\n\t\}\r?\n\r?\n\tprivate enqueuePreferenceOperation''',
+    usage_ext_stop_replacement,
+    "codex-usage stop clears compact status",
 )
 replace_regex(
     usage_ext,
-    r'''this\.lastUsage = undefined;\r?\n\t\t\t\tctx\.ui\.setStatus\(EXTENSION_ID, undefined\);\r?\n(?:\t\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, undefined\);\r?\n)?''',
-    usage_ext_missing_auth_replacement + "\n",
-    "codex-usage clear compact status on missing auth",
+    r'''\tprivate async refresh\(ctx = this\.ctx, modelId = ctx\?\.model\?\.id, generation = this\.generation\): Promise<void> \{.*?\r?\n\t\}\r?\n\r?\n\tprivate renderLast''',
+    usage_ext_refresh_replacement,
+    "codex-usage compact refresh method",
 )
 replace_regex(
     usage_ext,
-    r'''ctx\.ui\.setStatus\(EXTENSION_ID, unavailableStatus\(ctx, modelId\)\);\r?\n(?:\t\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, undefined\);\r?\n)?''',
-    usage_ext_unavailable_replacement + "\n",
-    "codex-usage clear compact status on unavailable",
-)
-replace_regex(
-    usage_ext,
-    r'''\t\t\tthis\.lastUsage = usage;\r?\n\t\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, usage, this\.preferences, modelId\)|undefined|"")\);\r?\n(?:\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, usage, this\.preferences\)\);\r?\n)?''',
-    usage_ext_refresh_replacement + "\n",
-    "codex-usage hide full status refresh",
-)
-replace_regex(
-    usage_ext,
-    r'''\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, this\.lastUsage, this\.preferences, ctx\.model\?\.id\)|undefined|"")\);\r?\n(?:\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, this\.lastUsage, this\.preferences\)\);\r?\n)?''',
-    usage_ext_render_replacement + "\n",
-    "codex-usage hide full status renderLast",
+    r'''\tprivate renderLast\(ctx: ExtensionContext\): boolean \{.*?\r?\n\t\}\r?\n\r?\n\tprivate savePreferences''',
+    usage_ext_render_replacement,
+    "codex-usage compact renderLast method",
 )
 
 usage_percent_replacement = '''function formatPercent(theme: Theme, leftPercent: number | null, mode: PercentMode): string {
