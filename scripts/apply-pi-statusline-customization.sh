@@ -138,7 +138,7 @@ footer_map_replacement = '''          )
             .map((entry) => entry.value)
             .filter((value) => !isDuplicateCodexUsageStatus(value));
           const renderedLines = lines.map((line) => truncateToWidth(line, width, "…"));'''
-footer_helper_replacement = '''function isDuplicateCodexUsageStatus(value: string): boolean {
+footer_helper_replacement = r'''function isDuplicateCodexUsageStatus(value: string): boolean {
   return /^Codex(?: Spark)?\s+5h\s+\d+%\s+7d\s+\d+%/.test(stripAnsi(value));
 }
 
@@ -182,6 +182,16 @@ chrome_status_replacement = '''\tconst updateChromeStatus = (ctx: ExtensionConte
 replace_regex(chrome, r'''\tconst authCountdownLabel = \(\): string => \{.*?\r?\n\t\};''', chrome_auth_replacement, "pi-chrome compact auth label")
 replace_regex(chrome, r'''\tconst updateChromeStatus = \(ctx: ExtensionContext\): void => \{.*?\r?\n\t\};''', chrome_status_replacement, "pi-chrome compact status")
 
+usage_ext_import_replacement = '''import { formatCompactStatus, formatStatus, unavailableStatus } from "../src/codex-usage/format";'''
+usage_ext_const_replacement = '''const EXTENSION_ID = "codex-usage";
+const COMPACT_EXTENSION_ID = `${EXTENSION_ID}.compact`;'''
+usage_ext_stop_replacement = '''ctx.ui.setStatus(EXTENSION_ID, undefined);
+\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);'''
+usage_ext_missing_auth_replacement = '''this.lastUsage = undefined;
+\t\t\t\tctx.ui.setStatus(EXTENSION_ID, undefined);
+\t\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);'''
+usage_ext_unavailable_replacement = '''ctx.ui.setStatus(EXTENSION_ID, unavailableStatus(ctx, modelId));
+\t\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);'''
 usage_ext_refresh_replacement = '''\t\t\tthis.lastUsage = usage;
 \t\t\tctx.ui.setStatus(EXTENSION_ID, "");
 \t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, usage, this.preferences));'''
@@ -189,14 +199,44 @@ usage_ext_render_replacement = '''\t\tctx.ui.setStatus(EXTENSION_ID, "");
 \t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, this.lastUsage, this.preferences));'''
 replace_regex(
     usage_ext,
-    r'''\t\t\tthis\.lastUsage = usage;\r?\n\t\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, usage, this\.preferences, modelId\)|undefined|"")\);\r?\n\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, usage, this\.preferences\)\);''',
-    usage_ext_refresh_replacement,
+    r'''import \{ (?:formatCompactStatus, )?formatStatus, unavailableStatus \} from "\.\./src/codex-usage/format";''',
+    usage_ext_import_replacement,
+    "codex-usage import compact formatter",
+)
+replace_regex(
+    usage_ext,
+    r'''const EXTENSION_ID = "codex-usage";\r?\n(?:const COMPACT_EXTENSION_ID = `\$\{EXTENSION_ID\}\.compact`;\r?\n)?''',
+    usage_ext_const_replacement + "\n",
+    "codex-usage compact status key",
+)
+replace_regex(
+    usage_ext,
+    r'''ctx\.ui\.setStatus\(EXTENSION_ID, undefined\);\r?\n(?:\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, undefined\);\r?\n)?''',
+    usage_ext_stop_replacement + "\n",
+    "codex-usage clear compact status on stop",
+)
+replace_regex(
+    usage_ext,
+    r'''this\.lastUsage = undefined;\r?\n\t\t\t\tctx\.ui\.setStatus\(EXTENSION_ID, undefined\);\r?\n(?:\t\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, undefined\);\r?\n)?''',
+    usage_ext_missing_auth_replacement + "\n",
+    "codex-usage clear compact status on missing auth",
+)
+replace_regex(
+    usage_ext,
+    r'''ctx\.ui\.setStatus\(EXTENSION_ID, unavailableStatus\(ctx, modelId\)\);\r?\n(?:\t\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, undefined\);\r?\n)?''',
+    usage_ext_unavailable_replacement + "\n",
+    "codex-usage clear compact status on unavailable",
+)
+replace_regex(
+    usage_ext,
+    r'''\t\t\tthis\.lastUsage = usage;\r?\n\t\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, usage, this\.preferences, modelId\)|undefined|"")\);\r?\n(?:\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, usage, this\.preferences\)\);\r?\n)?''',
+    usage_ext_refresh_replacement + "\n",
     "codex-usage hide full status refresh",
 )
 replace_regex(
     usage_ext,
-    r'''\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, this\.lastUsage, this\.preferences, ctx\.model\?\.id\)|undefined|"")\);\r?\n\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, this\.lastUsage, this\.preferences\)\);''',
-    usage_ext_render_replacement,
+    r'''\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, this\.lastUsage, this\.preferences, ctx\.model\?\.id\)|undefined|"")\);\r?\n(?:\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, this\.lastUsage, this\.preferences\)\);\r?\n)?''',
+    usage_ext_render_replacement + "\n",
     "codex-usage hide full status renderLast",
 )
 

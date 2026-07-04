@@ -117,6 +117,26 @@ function Patch-PiChrome {
 }
 
 function Patch-CodexUsageExtension {
+  $importReplacement = @'
+import { formatCompactStatus, formatStatus, unavailableStatus } from "../src/codex-usage/format";
+'@
+  $constReplacement = @'
+const EXTENSION_ID = "codex-usage";
+const COMPACT_EXTENSION_ID = `${EXTENSION_ID}.compact`;
+'@
+  $stopReplacement = @'
+ctx.ui.setStatus(EXTENSION_ID, undefined);
+			ctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
+'@
+  $missingAuthReplacement = @'
+this.lastUsage = undefined;
+				ctx.ui.setStatus(EXTENSION_ID, undefined);
+				ctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
+'@
+  $unavailableReplacement = @'
+ctx.ui.setStatus(EXTENSION_ID, unavailableStatus(ctx, modelId));
+				ctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
+'@
   $refreshReplacement = @'
 			this.lastUsage = usage;
 			ctx.ui.setStatus(EXTENSION_ID, "");
@@ -127,8 +147,13 @@ function Patch-CodexUsageExtension {
 		ctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, this.lastUsage, this.preferences));
 '@
 
-  Replace-Regex $UsageExtensionTarget '(?s)\t\t\tthis\.lastUsage = usage;\r?\n\t\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, usage, this\.preferences, modelId\)|undefined|"")\);\r?\n\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, usage, this\.preferences\)\);' $refreshReplacement "codex-usage hide full status refresh"
-  Replace-Regex $UsageExtensionTarget '(?s)\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, this\.lastUsage, this\.preferences, ctx\.model\?\.id\)|undefined|"")\);\r?\n\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, this\.lastUsage, this\.preferences\)\);' $renderLastReplacement "codex-usage hide full status renderLast"
+  Replace-Regex $UsageExtensionTarget 'import \{ (?:formatCompactStatus, )?formatStatus, unavailableStatus \} from "\.\./src/codex-usage/format";' $importReplacement "codex-usage import compact formatter"
+  Replace-Regex $UsageExtensionTarget 'const EXTENSION_ID = "codex-usage";\r?\n(?:const COMPACT_EXTENSION_ID = `\$\{EXTENSION_ID\}\.compact`;\r?\n)?' $constReplacement "codex-usage compact status key"
+  Replace-Regex $UsageExtensionTarget 'ctx\.ui\.setStatus\(EXTENSION_ID, undefined\);\r?\n(?:\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, undefined\);\r?\n)?' $stopReplacement "codex-usage clear compact status on stop"
+  Replace-Regex $UsageExtensionTarget 'this\.lastUsage = undefined;\r?\n\t\t\t\tctx\.ui\.setStatus\(EXTENSION_ID, undefined\);\r?\n(?:\t\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, undefined\);\r?\n)?' $missingAuthReplacement "codex-usage clear compact status on missing auth"
+  Replace-Regex $UsageExtensionTarget 'ctx\.ui\.setStatus\(EXTENSION_ID, unavailableStatus\(ctx, modelId\)\);\r?\n(?:\t\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, undefined\);\r?\n)?' $unavailableReplacement "codex-usage clear compact status on unavailable"
+  Replace-Regex $UsageExtensionTarget '(?s)\t\t\tthis\.lastUsage = usage;\r?\n\t\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, usage, this\.preferences, modelId\)|undefined|"")\);\r?\n(?:\t\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, usage, this\.preferences\)\);\r?\n)?' $refreshReplacement "codex-usage hide full status refresh"
+  Replace-Regex $UsageExtensionTarget '(?s)\t\tctx\.ui\.setStatus\(EXTENSION_ID, (?:formatStatus\(ctx, this\.lastUsage, this\.preferences, ctx\.model\?\.id\)|undefined|"")\);\r?\n(?:\t\tctx\.ui\.setStatus\(COMPACT_EXTENSION_ID, formatCompactStatus\(ctx, this\.lastUsage, this\.preferences\)\);\r?\n)?' $renderLastReplacement "codex-usage hide full status renderLast"
 }
 
 function Patch-CodexUsage {
