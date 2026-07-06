@@ -38,9 +38,9 @@ primary_refs:
 
 Adapter Pi local instalado en `.pi/` con prompts/comandos AOS y extensiones de soporte (`aos-tools.ts`, `aos-checkpoint-nudge.ts`). Extensión global adicional activa: `C:\Users\jpsal\.pi\agent\extensions\windows-input.ts`.
 
-Configuracion global Pi de Windows alineada el 2026-06-20 con `jpsal@192.168.100.8` y realineada con VPS `vps-cf-jpsal` el 2026-06-29:
+Configuracion global Pi de Windows alineada el 2026-06-20 con `jpsal@192.168.100.8`, realineada con VPS `vps-cf-jpsal` el 2026-06-29 y corregida el 2026-07-06:
 
-- Pi CLI `0.79.8`, proveedor/modelo por defecto `openai-codex/gpt-5.5`, thinking `high`.
+- Proveedor/modelo por defecto en Windows y VPS: `openai-codex/gpt-5.5`, thinking `high`. Este default coincide con el modelo seleccionado en la sesion actual; no usar `openrouter/z-ai/glm-5.2` como default salvo pedido explicito.
 - Tema `jp-tokyo-night-user-focus`, `powerline.enabled=false`, `defaultProjectTrust=always`.
 - Paquetes activos historicos: `pi-rtk-optimizer`, `pi-codemapper`, `pi-minimal-subagent`, `pi-observational-memory`, `pi-web-access`, `pi-mcp-extension`, `pi-until-done`, `pi-chrome`, `pi-council`, `@llblab/pi-telegram`, `@calesennett/pi-codex-usage`, `@mporenta/pi-discord-remote`, `@juicesharp/rpiv-ask-user-question`, `@juicesharp/rpiv-i18n`, `@venthezone/picord`, `pi-ask-user`, `pi-footer`, `pi-agents-pool`.
 - UX compacta agregada 2026-07-06 en Windows: `pi-tool-display`, `pi-hide-messages`, `@firstpick/pi-package-webui`, `pi-web-providers`, `@amaster.ai/pi-image-gen`. Config versionada en `pi-extensions/pi-tool-display.json` y `pi-extensions/pi-hide-messages.json`; reaplicar con `scripts/apply-pi-webui-ux.ps1` o `.sh`.
@@ -90,7 +90,7 @@ Estado verificado y realineado el 2026-06-29 desde PC `asus`:
 - Pi CLI de usuario: `~/.local/bin/pi` (`0.80.2`). `/usr/bin/pi` puede existir viejo (`0.79.6`), por eso `~/.zshenv` mantiene `~/.local/bin` y `~/.bun/bin` antes en `PATH` incluso para SSH no interactivo.
 - Bun/Node/Ripgrep/CodeMapper disponibles: `bun`, `node`, `rg`, `cm`.
 - Config Pi alineada con Windows salvo diferencias OS-specific:
-  - `defaultProvider=openai-codex`, `defaultModel=gpt-5.5`, `defaultThinkingLevel=high`.
+  - `defaultProvider=openai-codex`, `defaultModel=gpt-5.5`, `defaultThinkingLevel=high`; corregido/verificado el 2026-07-06 despues de detectar que Windows/VPS habian quedado temporalmente en `openrouter/z-ai/glm-5.2`.
   - `theme=jp-tokyo-night-user-focus`, `hideThinkingBlock=true`, `powerline.enabled=false`.
   - paquetes principales: `pi-rtk-optimizer`, `pi-codemapper`, `pi-minimal-subagent`, `pi-observational-memory`, `pi-web-access`, `pi-mcp-extension`, `pi-until-done`, `pi-council`, `pi-telegram`, `pi-codex-usage`, `pi-discord-remote`, `rpiv-ask-user-question`, `rpiv-i18n`, `pi-ask-user`, `pi-footer`, `pi-agents-pool`, `pi-computer-use`. `pi-chrome` es OS/browser-specific y no debe sincronizarse al VPS salvo pedido explicito.
   - Recursos globales alineados: `AGENTS.md`, `settings.json`, `keybindings.json`, `models.json`, `mcp.json`, `telegram.json`, `pi-footer.json`, `pi-rtk-optimizer/config.json`, tema `jp-tokyo-night-user-focus`, `windows-input.ts`.
