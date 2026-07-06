@@ -25,7 +25,7 @@ Ultima actualizacion manual: 2026-07-03.
 - Adapter Pi `.pi/` instalado localmente con prompts/comandos AOS y extensiones de soporte, copiado desde `jpsal@192.168.100.8` el 2026-06-20.
 - Extensión global `windows-input.ts` instalada en `C:\Users\jpsal\.pi\agent\extensions\windows-input.ts`; copia fuente versionable en `pi-extensions/windows-input.ts`, instrucciones en `pi-extensions/README.md` e instaladores `scripts/install-windows-input.sh` / `scripts/install-windows-input.ps1`. Reemplaza el prompt principal de Pi con un `CustomEditor` estilo Windows/VS Code. Comandos: `/windows-input status|on|off|toggle`; usar `/reload` en sesiones abiertas.
 - Statusline compacta de JP guardada: `pi-extensions/pi-footer.json`, topic `docs/topics/pi-statusline-customization.md`, restauradores `scripts/apply-pi-statusline-customization.ps1` / `.sh`. Incluye parches locales para `pi-footer` (filtra duplicado `Codex 5h NN% 7d NN%`), `pi-chrome` (`chrome:∞`) y `pi-codex-usage` (`5h:86% · 7d:33% · ↺7d:3d0h`, sin publicar el status completo duplicado). Validado en `C:\dev\dictation-tauri`; aplicar tambien en VPS con script `.sh`. Reaplicar tras actualizar extensiones y luego `/reload`.
-- PI WEB remoto debe consultarse en `C:\dev\infra`: VPS `vps`, servicios user `pi-web.service`/`pi-web-sessiond.service`, bind `127.0.0.1:8504`, publicado como `https://pi.jpsala.dev` con Cloudflare Access `JP only`; SSH tunnel queda como fallback.
+- PI WEB remoto debe consultarse en `C:\dev\infra`: VPS `vps`, servicios user `pi-web.service`/`pi-web-sessiond.service`, bind `127.0.0.1:8504`, publicado como `https://pi.jpsala.dev` con Cloudflare Access `JP only`; SSH tunnel queda como fallback. Para UX local/browser: `pi-tool-display`, `pi-hide-messages` y `@firstpick/pi-package-webui`; aplicar configs/parche con `scripts/apply-pi-webui-ux.ps1` o `.sh`.
 
 ## Riesgos
 
@@ -38,3 +38,4 @@ Ultima actualizacion manual: 2026-07-03.
 ## Proximo Paso Probable
 
 Si JP pide instalar `windows-input` en otra PC: abrir `docs/topics/windows-input-extension.md` y `pi-extensions/README.md`; ejecutar `scripts/install-windows-input.sh --global` en Linux/macOS/Git Bash o `./scripts/install-windows-input.ps1 -Scope Global` en PowerShell; luego pedir/ejecutar `/reload` en Pi y verificar `/windows-input status`.
+- Continuidad Pi 2026-07-04: JP guarda primero con `/aos-guardar-sesion`; luego `/aos-continuar [objetivo]` es el unico comando para abrir sesion nueva con prompt de continuidad desde docs vivos. `--preview` permite revisar antes de enviar.

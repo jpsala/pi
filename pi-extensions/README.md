@@ -51,6 +51,28 @@ scripts/apply-pi-statusline-customization.sh
 
 Luego ejecutar `/reload` dentro de Pi.
 
+## UX compacta de tools y WebUI
+
+Esta repo guarda tambien la configuracion de legibilidad para reducir ruido en Pi:
+
+- `pi-extensions/pi-tool-display.json`: `read/search/MCP` ocultos por defecto y `bash` en resumen.
+- `pi-extensions/pi-hide-messages.json`: mantiene visibles los ultimos 12 mensajes.
+- `scripts/apply-pi-webui-ux.ps1` / `.sh`: copia esas configs y parchea `@firstpick/pi-package-webui` para ocultar tarjetas `EXTENSION OUTPUT` generadas por `ctx.ui.notify(...)`.
+
+Windows:
+
+```powershell
+./scripts/apply-pi-webui-ux.ps1
+```
+
+Linux/macOS/VPS:
+
+```bash
+scripts/apply-pi-webui-ux.sh
+```
+
+Luego reiniciar WebUI o hacer hard refresh del navegador, y ejecutar `/reload` dentro de Pi para las configs TUI.
+
 ## `windows-input.ts`
 
 Editor principal del prompt de Pi con semantica estilo Windows/VS Code. No es especifico de Windows como sistema operativo; deberia funcionar en Windows, Linux y macOS si el terminal entrega las teclas a Pi.

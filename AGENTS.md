@@ -23,6 +23,12 @@ No abrir docs largos ni crear estructura de producto hasta que el objetivo del w
 - Limitar `init/adopt/update/perfect os` a la capa agentica salvo pedido explicito.
 - Para implementacion/review, `docs/topics/minimal-implementation.md` es politica liviana opcional: reusar lo existente y evitar dependencias/boilerplate innecesarios; Ponytail no es obligatorio ni dependencia local.
 
+## Web, Internet E Instalaciones
+
+- Usar web/internet libremente por defecto cuando conocimiento externo o cambiante evite adivinar: docs oficiales, releases, issues/source, metadata de paquetes, errores, APIs y comparativas. No enviar secretos, `.env`, codigo privado sensible, datos personales ni credenciales a servicios externos.
+- Si evidencia online contradice el repo local, docs del proyecto o comportamiento observado, consultar a JP antes de decidir; presentar ambas evidencias, fuentes e impacto practico.
+- Antes de instalar dependencias, CLIs globales, paquetes de sistema, herramientas de package-manager o binarios/scripts remotos, pedir autorizacion explicita con comando exacto, alcance, motivo, riesgos, alternativa, cambios esperados y rollback. Tratar `curl | sh`/scripts remotos como alto riesgo y preferir alternativas auditables.
+
 ## Comandos AOS
 
 - `os help`: mostrar comandos OS disponibles y cuando usarlos.

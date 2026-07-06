@@ -2,7 +2,7 @@
 
 Generated cache. Do not edit by hand.
 
-Generated: 2026-07-04T02:05:22.020Z
+Generated: 2026-07-06T18:23:43.492Z
 
 ## Topics
 
@@ -29,12 +29,12 @@ Generated: 2026-07-04T02:05:22.020Z
 ## Skills
 
 - Canon: [docs/skills/](../skills/)
-- Operational commands: aos-adopt-os, aos-align-os-project, aos-evaluar-skills, aos-fanout, aos-gol-lite, aos-guardar-sesion, aos-help, aos-init-os, aos-nueva-sesion, aos-nueva-sesion-con-gol, aos-orquestar, aos-perfect-os, aos-realinear-os, aos-repo-commit-push, aos-sigamos, aos-update-os
+- Operational commands: aos-adopt-os, aos-align-os-project, aos-evaluar-skills, aos-fanout, aos-gol-lite, aos-guardar-sesion, aos-help, aos-init-os, aos-orquestar, aos-perfect-os, aos-realinear-os, aos-repo-commit-push, aos-sigamos, aos-update-os
 - Guidance: [local-codex-skills](../topics/local-codex-skills.md)
 
 ## Pi Resources
 
-- Prompts: aos-adopt-os, aos-align-os-project, aos-cerrar, aos-checkpoint, aos-continuar-sesion, aos-fanout, aos-gol, aos-guardar-sesion, aos-help, aos-init-os, aos-nueva-sesion-con-gol, aos-nueva-sesion, aos-orquestar, aos-perfect-os, aos-realinear, aos-sigamos, aos-siguiente, aos-update-os
+- Prompts: aos-adopt-os, aos-align-os-project, aos-cerrar, aos-checkpoint, aos-fanout, aos-gol, aos-guardar-sesion, aos-help, aos-init-os, aos-orquestar, aos-perfect-os, aos-realinear, aos-sigamos, aos-update-os
 - Project extensions: aos-checkpoint-nudge.ts, aos-tools.ts
 - Global extensions: windows-input.ts
 - Guidance: [pi-agentic-os](../topics/pi-agentic-os.md)

@@ -14,12 +14,25 @@ triggers:
   - pi web
   - web ui pi
   - vps pi web
+  - web research
+  - internet
+  - instalar paquetes
+  - instalar cli
 primary_refs:
   - docs/OS_PLAYBOOK.md
   - docs/topics/agentic-os-operations.md
 ---
 
 # Pi Agentic OS
+
+## Web, Internet E Instalaciones
+
+- Usar web/internet libremente por defecto cuando conocimiento externo o cambiante evite adivinar: documentacion oficial, changelogs/releases, issues/source, metadata de paquetes, errores, APIs, ejemplos y comparativas.
+- Si evidencia online contradice el repo local, docs del proyecto o comportamiento observado, pausar y consultar a JP antes de decidir; presentar ambas evidencias con fuentes y el impacto practico.
+- No enviar secretos, `.env`, codigo privado sensible, datos personales ni credenciales a servicios externos.
+- Priorizar fuentes oficiales y citar fuentes cuando afecten decisiones tecnicas.
+- Antes de instalar dependencias, CLIs globales, paquetes de sistema, herramientas de package-manager o binarios/scripts remotos, pedir autorizacion explicita con comando exacto, alcance, motivo, riesgos, alternativa, cambios esperados y rollback.
+- Tratar `curl | sh`, binarios remotos y scripts de instalacion no auditados como alto riesgo; preferir package managers, checksums, docs oficiales o pasos inspeccionables.
 
 ## Estado
 
@@ -29,7 +42,8 @@ Configuracion global Pi de Windows alineada el 2026-06-20 con `jpsal@192.168.100
 
 - Pi CLI `0.79.8`, proveedor/modelo por defecto `openai-codex/gpt-5.5`, thinking `high`.
 - Tema `jp-tokyo-night-user-focus`, `powerline.enabled=false`, `defaultProjectTrust=always`.
-- Paquetes activos: `pi-rtk-optimizer`, `pi-codemapper`, `pi-minimal-subagent`, `pi-observational-memory`, `pi-web-access`, `pi-mcp-extension`, `pi-until-done`, `pi-chrome`, `pi-council`, `@llblab/pi-telegram`, `@calesennett/pi-codex-usage`, `@mporenta/pi-discord-remote`, `@juicesharp/rpiv-ask-user-question`, `@juicesharp/rpiv-i18n`, `@venthezone/picord`, `pi-ask-user`, `pi-footer`, `pi-agents-pool`.
+- Paquetes activos historicos: `pi-rtk-optimizer`, `pi-codemapper`, `pi-minimal-subagent`, `pi-observational-memory`, `pi-web-access`, `pi-mcp-extension`, `pi-until-done`, `pi-chrome`, `pi-council`, `@llblab/pi-telegram`, `@calesennett/pi-codex-usage`, `@mporenta/pi-discord-remote`, `@juicesharp/rpiv-ask-user-question`, `@juicesharp/rpiv-i18n`, `@venthezone/picord`, `pi-ask-user`, `pi-footer`, `pi-agents-pool`.
+- UX compacta agregada 2026-07-06 en Windows: `pi-tool-display`, `pi-hide-messages`, `@firstpick/pi-package-webui`, `pi-web-providers`, `@amaster.ai/pi-image-gen`. Config versionada en `pi-extensions/pi-tool-display.json` y `pi-extensions/pi-hide-messages.json`; reaplicar con `scripts/apply-pi-webui-ux.ps1` o `.sh`.
 - Recursos globales copiados: `AGENTS.md`, `keybindings.json`, `mcp.json`, `models.json`, `telegram.json`, configs de `pi-footer` y `pi-rtk-optimizer`, prompt `codex-usage`, tema `jp-tokyo-night-user-focus`.
 - `cm.exe` copiado a `~/.local/bin` y disponible en PATH.
 - Extensión global `windows-input.ts`: input principal estilo Windows/VS Code mediante `CustomEditor`; comandos `/windows-input status|on|off|toggle`; status footer `win-input`.
@@ -78,7 +92,7 @@ Estado verificado y realineado el 2026-06-29 desde PC `asus`:
 - Config Pi alineada con Windows salvo diferencias OS-specific:
   - `defaultProvider=openai-codex`, `defaultModel=gpt-5.5`, `defaultThinkingLevel=high`.
   - `theme=jp-tokyo-night-user-focus`, `hideThinkingBlock=true`, `powerline.enabled=false`.
-  - paquetes principales: `pi-rtk-optimizer`, `pi-codemapper`, `pi-minimal-subagent`, `pi-observational-memory`, `pi-web-access`, `pi-mcp-extension`, `pi-until-done`, `pi-chrome`, `pi-council`, `pi-telegram`, `pi-codex-usage`, `pi-discord-remote`, `rpiv-ask-user-question`, `rpiv-i18n`, `pi-ask-user`, `pi-footer`, `pi-agents-pool`, `pi-computer-use`.
+  - paquetes principales: `pi-rtk-optimizer`, `pi-codemapper`, `pi-minimal-subagent`, `pi-observational-memory`, `pi-web-access`, `pi-mcp-extension`, `pi-until-done`, `pi-council`, `pi-telegram`, `pi-codex-usage`, `pi-discord-remote`, `rpiv-ask-user-question`, `rpiv-i18n`, `pi-ask-user`, `pi-footer`, `pi-agents-pool`, `pi-computer-use`. `pi-chrome` es OS/browser-specific y no debe sincronizarse al VPS salvo pedido explicito.
   - Recursos globales alineados: `AGENTS.md`, `settings.json`, `keybindings.json`, `models.json`, `mcp.json`, `telegram.json`, `pi-footer.json`, `pi-rtk-optimizer/config.json`, tema `jp-tokyo-night-user-focus`, `windows-input.ts`.
 - Trust OS-specific: Windows usa `C:\dev`; VPS usa `/home/jpsal/dev`; no copiar `trust.json` literal.
 - MCP `ahk` apunta a rutas Windows/AutoHotkey y no se espera que funcione en Linux; dejarlo como diferencia OS-specific salvo pedido explicito.
@@ -102,7 +116,7 @@ Fuente de verdad operativa: `C:\dev\infra`, especialmente:
 
 Estado documentado en `infra` el 2026-07-01:
 
-- El paquete correcto para UI web remota de Pi es `@jmfederico/pi-web`; no confundir con `pi-web-access`, que solo agrega tools de búsqueda/fetch web para Pi.
+- El paquete correcto para UI web remota persistente de Pi en el VPS es `@jmfederico/pi-web`; no confundir con `pi-web-access`, que solo agrega tools de búsqueda/fetch web para Pi. `@firstpick/pi-package-webui` es una WebUI companion por sesión/RPC; útil localmente, pero no reemplaza el servicio persistente del VPS sin rediseñar publicación/tunnel.
 - PI WEB está instalado en el VPS como usuario `jpsal`, con paquete `@jmfederico/pi-web` versión `1.202606.7`.
 - Corre como servicios systemd user: `pi-web.service` y `pi-web-sessiond.service`.
 - Config remota: `/home/jpsal/.config/pi-web/config.json`.

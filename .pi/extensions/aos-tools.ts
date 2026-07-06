@@ -236,9 +236,8 @@ ${audit}
 ### Comandos utiles
 
 - \`/aos-guardar-sesion\`: persistir valor durable sin abrir sesion nueva.
-- \`/aos-nueva-sesion [objetivo]\`: guardar y crear nueva sesion Pi usando docs como fuente.
-- \`/aos-nueva-sesion-con-gol [objetivo]\`: guardar, crear nueva sesion y arrancar con \`gol\`.
-- \`/aos-continuar [objetivo]\`: crear nueva sesion Pi usando docs como fuente.
+- \`/aos-continuar [objetivo]\`: abrir nueva sesion Pi y pasarle un prompt de continuidad desde docs vivos (usar despues de \`/aos-guardar-sesion\`).
+- \`/aos-continuar --preview [objetivo]\`: abrir nueva sesion con el prompt cargado en el editor, sin enviarlo automaticamente.
 - \`/aos-sync\`: sincronizar indice/audit despues de cambios del OS.
 - \`/aos-skills status|on|off|toggle\`: controlar discovery de skills via .agents/skills.
 - \`/aos-gol [objetivo]\`: preparar un \`/until-done\` acotado y revisable.
@@ -246,25 +245,25 @@ ${audit}
 - \`/reload\`: recargar extensiones/prompts/skills.`;
 }
 
-function buildHandoff(ctx: ExtensionCommandContext, goal: string, git: { branch: string; dirty: string; changedCount: number }): string {
-  const docsSnapshot = buildDocsSnapshot(ctx.cwd);
+function buildContinuationPrompt(ctx: ExtensionCommandContext, goal: string, git: { branch: string; dirty: string; changedCount: number }): string {
   const currentSession = ctx.sessionManager.getSessionFile() ?? "(ephemeral)";
   const requestedGoal = goal || "Continuar con el proximo paso probable de docs/WORKING_MEMORY.md.";
 
   return `Continuar en ${ctx.cwd}.
 
-Leer primero la ruta liviana:
+Asumi que JP ya ejecuto /aos-guardar-sesion antes de abrir esta sesion. No vuelvas a guardar por rutina ni reconstruyas contexto desde el transcript padre; usa los docs vivos como fuente de verdad.
+
+Objetivo de esta nueva sesion: ${requestedGoal}
+Sesion padre: ${currentSession}
+
+Leer primero, en este orden y solo lo necesario:
 1. docs/.generated/context-index.md
 2. docs/WORKING_MEMORY.md
-3. topic/track/spec puntual segun el objetivo
+3. docs/TOPICS.md si hace falta elegir topic
+4. topic/track/spec puntual mencionado por WORKING_MEMORY, el indice o el objetivo
+5. docs/DECISIONS.md solo si el objetivo depende de una decision durable
 
-Sesion padre: ${currentSession}
-Objetivo de esta nueva sesion: ${requestedGoal}
-
-Estado desde docs vivos:
-${docsSnapshot || "(No se pudo leer snapshot de docs vivos; usar ruta liviana.)"}
-
-Git:
+Estado Git al crear este handoff:
 - Branch: ${git.branch}
 - Worktree: ${git.changedCount ? `${git.changedCount} archivo(s) con cambios` : "limpio"}
 
@@ -274,34 +273,21 @@ ${git.dirty}
 \`\`\`
 
 Reglas de continuidad:
-- El handoff no es fuente de verdad; prevalecen los docs versionados.
-- No crear transcript.
-- Si aparece valor durable nuevo, usar /aos-guardar-sesion o persistir en docs vivos.
-- Seguir en esta sesion nueva con el primer paso concreto.`;
-}
-
-async function runGuardarSesionBeforeContinuation(
-  pi: ExtensionAPI,
-  ctx: ExtensionCommandContext,
-  goal: string,
-): Promise<void> {
-  ctx.ui.notify("Ejecutando aos-guardar-sesion antes de abrir nueva sesion...", "info");
-  pi.sendUserMessage(`aos-guardar-sesion antes de abrir una nueva sesion.
-
-Objetivo de continuidad: ${goal || "continuar con el proximo paso probable"}.
-
-Usa docs vivos como fuente de verdad. Persiste solo valor durable, no prepares handoff pegable y no abras thread nuevo; la extension Pi abrira la nueva sesion automaticamente cuando termines.`);
-  await ctx.waitForIdle();
+- Los docs versionados mandan sobre este prompt.
+- Si algo importante no esta en docs, preguntale a JP; no lo inventes.
+- No crear transcript ni copiar historia larga.
+- Si aparece valor durable nuevo durante esta sesion, persistilo en docs vivos con el destino correcto.
+- Empeza leyendo la ruta liviana y segui con el primer paso concreto del objetivo.`;
 }
 
 async function createContinuationSession(
   pi: ExtensionAPI,
   ctx: ExtensionCommandContext,
   goal: string,
-  kickoff: string | null,
+  preview: boolean,
 ): Promise<void> {
   const git = await gitSummary(pi);
-  const handoff = buildHandoff(ctx, goal, git);
+  const prompt = buildContinuationPrompt(ctx, goal, git);
   const parentSession = ctx.sessionManager.getSessionFile();
   const name = goal ? `OS · ${goal.slice(0, 56)}` : "OS · continuidad";
 
@@ -309,15 +295,16 @@ async function createContinuationSession(
     parentSession,
     setup: async (sessionManager) => {
       sessionManager.appendSessionInfo(name);
-      sessionManager.appendCustomMessageEntry("os-handoff", handoff, true, { parentSession, goal });
+      sessionManager.appendCustomMessageEntry("os-continuation-prompt", prompt, true, { parentSession, goal, preview });
     },
     withSession: async (replacementCtx) => {
-      if (kickoff) {
-        await replacementCtx.sendUserMessage(kickoff);
-      } else {
-        replacementCtx.ui.setEditorText("aos-sigamos");
-        replacementCtx.ui.notify("Nueva sesion OS lista. El editor tiene `aos-sigamos`; envia cuando quieras arrancar.", "info");
+      if (preview) {
+        replacementCtx.ui.setEditorText(prompt);
+        replacementCtx.ui.notify("Nueva sesion OS lista con prompt de continuidad en el editor.", "info");
+        return;
       }
+
+      await replacementCtx.sendUserMessage(prompt);
     },
   });
 
@@ -328,6 +315,10 @@ export default function osTools(pi: ExtensionAPI) {
   pi.on("session_start", async (_event, ctx) => {
     const status = setSkillsDiscovery(ctx.cwd, "off");
     if (status.state === "disabled") {
+      ctx.ui.notify(
+        `Pi skills discovery deshabilitado (${status.detail}). Usá /reload si las skills siguen apareciendo en slash.`,
+        "info",
+      );
       return;
     }
 
@@ -408,63 +399,19 @@ export default function osTools(pi: ExtensionAPI) {
   });
 
   pi.registerCommand("aos-continuar", {
-    description: "Crear una nueva sesion Pi con handoff compacto desde docs vivos",
+    description: "Abrir una nueva sesion Pi y pasarle un prompt de continuidad desde docs vivos (usar despues de /aos-guardar-sesion)",
     handler: async (args, ctx) => {
       if (!ctx.hasUI) {
-        ctx.ui.notify("aos-continuar requiere UI para confirmar guardado.", "error");
+        ctx.ui.notify("aos-continuar requiere UI para abrir una nueva sesion.", "error");
         return;
       }
 
-      const ok = await ctx.ui.confirm(
-        "Crear nueva sesion OS",
-        "Esto usa docs vivos como fuente. ¿Ya corriste /aos-guardar-sesion si habia valor durable nuevo?",
-      );
-      if (!ok) {
-        ctx.ui.setEditorText("/aos-guardar-sesion");
-        ctx.ui.notify("Primero corre /aos-guardar-sesion. Despues usa /aos-continuar.", "warning");
-        return;
-      }
+      const raw = args.trim();
+      const preview = /(^|\s)--preview(\s|$)/i.test(raw);
+      const goal = raw.replace(/(^|\s)--preview(\s|$)/gi, " ").trim();
 
-      await createContinuationSession(pi, ctx, args.trim(), null);
+      await createContinuationSession(pi, ctx, goal, preview);
     },
-  });
-
-  async function saveAndCreateNewSession(args: string, ctx: ExtensionCommandContext) {
-    const goal = args.trim();
-    await runGuardarSesionBeforeContinuation(pi, ctx, goal);
-    await createContinuationSession(pi, ctx, goal, null);
-  }
-
-  async function saveAndCreateNewSessionWithGol(args: string, ctx: ExtensionCommandContext) {
-    const goal = args.trim();
-    await runGuardarSesionBeforeContinuation(pi, ctx, goal);
-    const kickoff = `aos-gol${goal ? ` ${goal}` : ""}`;
-    await createContinuationSession(pi, ctx, goal, kickoff);
-  }
-
-  pi.registerCommand("aos-nueva-sesion", {
-    description: "Guardar valor durable y crear una nueva sesion Pi con handoff compacto",
-    handler: saveAndCreateNewSession,
-  });
-
-  pi.registerCommand("aos-continuar-sesion", {
-    description: "Alias legado de /aos-nueva-sesion: guardar valor durable y crear una nueva sesion Pi",
-    handler: saveAndCreateNewSession,
-  });
-
-  pi.registerCommand("aos-nueva-sesion-con-gol", {
-    description: "Guardar valor durable, crear una nueva sesion Pi y arrancarla con aos-gol",
-    handler: saveAndCreateNewSessionWithGol,
-  });
-
-  pi.registerCommand("aos-continuar-con-gol", {
-    description: "Alias legado de /aos-nueva-sesion-con-gol",
-    handler: saveAndCreateNewSessionWithGol,
-  });
-
-  pi.registerCommand("aos-siguiente", {
-    description: "Alias corto de /aos-nueva-sesion-con-gol",
-    handler: saveAndCreateNewSessionWithGol,
   });
 
   pi.on("session_before_compact", async (_event, ctx) => {
