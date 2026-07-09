@@ -31,7 +31,7 @@ Mantener una sola linea compacta con:
 Formato esperado aproximado:
 
 ```text
-gpt-5.5 • think:medium • dir:pi • git:main • (+0,-0) • ctx:30.6% • 272k • cache:2.3M • link: offline • win-input • chrome:∞ • usage:5h:86% · 7d:33% · colchón:+1.3d · ↺7d:3d0h
+gpt-5.6-sol • think:high • dir:pi • git:main • (+0,-0) • ctx:30.6% • 272k • cache:2.3M • link: offline • win-input • chrome:∞ • usage:5h:86% · 7d:33% · colchón:+1.3d · ↺7d:3d0h
 ```
 
 ## Archivos canonicos en este repo
@@ -71,7 +71,7 @@ Validado en `C:\dev\pi` y `C:\dev\dictation-tauri` tras `/reload`.
 Caso `dictation-tauri` con `pi-lens` project-local:
 
 ```text
-gpt-5.5 • think:high • dir:dictation-tauri • git:main • (+12199,-1241) • ctx:42.7% • 272k • cache:3.6M • link: offline • win-input • chrome:∞ • usage:5h:82% · 7d:33% · colchón:+1.3d · ↺7d:3d0h
+gpt-5.6-sol • think:high • dir:dictation-tauri • git:main • (+12199,-1241) • ctx:42.7% • 272k • cache:3.6M • link: offline • win-input • chrome:∞ • usage:5h:82% · 7d:33% · colchón:+1.3d · ↺7d:3d0h
 LSP Failed: rust
 ```
 
