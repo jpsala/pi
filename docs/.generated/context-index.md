@@ -2,17 +2,17 @@
 
 Generated cache. Do not edit by hand.
 
-Generated: 2026-07-09T12:19:38.847Z
+Generated: 2026-07-09T15:09:50.428Z
 
 ## Topics
 
 - active: [agent-tool-routing](../topics/agent-tool-routing.md) - tool routing, routing decision, combinar tools, elegir herramienta, dgoal, until-done, taskflow, advisor
 - active: [agentic-os-operations](../topics/agentic-os-operations.md) - init os, adopt os, update os, realinear os, perfect os
 - active: [docs-knowledge-system](../topics/docs-knowledge-system.md) - documentacion, docs, topics, indice, working memory
-- reference: [local-codex-skills](../topics/local-codex-skills.md) - skills, comandos locales, slash commands, docs/skills, .agents/skills
+- reference: [local-codex-skills](../topics/local-codex-skills.md) - skills locales, local skills, slash commands, docs/skills, .agents/skills, toggle skills, skills on, skills off
 - active: [minimal-implementation](../topics/minimal-implementation.md) - ponytail, minimal implementation, implementacion minima, solucion minima, yagni, over-engineering, bloat, boilerplate
 - active: [os-quality](../topics/os-quality.md) - perfect os, dejar en condiciones, calidad agentica, docs livianos, optimizar contexto
-- reference: [pi-agentic-os](../topics/pi-agentic-os.md) - pi os, pi agentic os, os-sync, ask_user, /ask, /gol, /until-done, pi-web
+- active: [pi-agentic-os](../topics/pi-agentic-os.md) - pi os, pi agentic os, /aos-continuar, /aos-sync, /aos-skills, /aos-plan-implementar, /aos-orquestar, /aos-fanout
 - active: [pi-extension-stack](../topics/pi-extension-stack.md) - extensiones pi, paquetes pi, pi packages, sincronizar pi, web_search, web_research, codemapper, fff
 - active: [pi-statusline-customization](../topics/pi-statusline-customization.md) - pi footer, pi statusline, chrome status, codex usage, otra pc, actualizar extensiones
 - active: [windows-input-extension](../topics/windows-input-extension.md) - windows-input, seleccion pi, shift arrow, ctrl shift arrow, custom editor, extension input
@@ -31,14 +31,14 @@ Generated: 2026-07-09T12:19:38.847Z
 ## Skills
 
 - Canon: [docs/skills/](../skills/)
-- Operational commands: aos-adopt-os, aos-align-os-project, aos-dynamic-workflows-pilot, aos-evaluar-skills, aos-fanout, aos-gol-lite, aos-guardar-sesion, aos-help, aos-init-os, aos-orquestar, aos-perfect-os, aos-plan-implementar, aos-realinear-os, aos-repo-commit-push, aos-sigamos, aos-update-os
+- Operational commands: aos-adopt-os, aos-align-os-project, aos-dynamic-workflows-pilot, aos-evaluar-skills, aos-fanout, aos-fleet-update, aos-gol-lite, aos-guardar-sesion, aos-help, aos-init-os, aos-orquestar, aos-perfect-os, aos-plan-implementar, aos-realinear-os, aos-repo-commit-push, aos-sigamos, aos-update-os
 - Guidance: [local-codex-skills](../topics/local-codex-skills.md)
 
 ## Pi Resources
 
 - Prompts: aos-adopt-os, aos-align-os-project, aos-cerrar, aos-checkpoint, aos-evaluar-skills, aos-fanout, aos-gol, aos-guardar-sesion, aos-help, aos-init-os, aos-orquestar, aos-perfect-os, aos-realinear, aos-sigamos, aos-update-os
 - Project extensions: aos-checkpoint-nudge.ts, aos-tools.ts
-- Global extensions: windows-input.ts
+- Global extensions: codex-usage-report.ts, windows-input.ts
 - Guidance: [pi-agentic-os](../topics/pi-agentic-os.md)
 
 ## Aliases
