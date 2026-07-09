@@ -15,6 +15,9 @@ Router liviano. Usar para decidir que abrir, no como lectura completa.
 | windows-input, selección Pi, Shift+Arrow, Ctrl+Shift+Arrow | [Windows Input Extension](topics/windows-input-extension.md), [Pi Agentic OS](topics/pi-agentic-os.md), [Pi Extensions README](../pi-extensions/README.md) | Extensión portable de input estilo Windows/VS Code para el prompt principal de Pi; incluye instaladores para otras PCs. |
 | implementación mínima, Ponytail, YAGNI, over-engineering | [Implementación mínima](topics/minimal-implementation.md) | Política liviana opcional subordinada a AOS; no instala dependencias. |
 
+| Pi tools, web research, taskflow, advisor, lens, paquetes Pi | [Pi Extension Stack](topics/pi-extension-stack.md) | Elegir tools Pi sin copiar inventario global ni instalar paquetes sin permiso. |
+| Routing de tools, taskflow, pi-workflow, advisor, dgoal | [agent-tool-routing](topics/agent-tool-routing.md), [pi-extension-stack](topics/pi-extension-stack.md) |
+
 ## Documentos Raiz
 
 - [README.md](README.md): mapa documental.

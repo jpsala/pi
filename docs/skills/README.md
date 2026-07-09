@@ -1,4 +1,5 @@
 # Skills Locales
+- `aos-dynamic-workflows-pilot/`: piloto opt-in para comparar `pi-dynamic-workflows` contra `taskflow` sin volverlo default.
 
 `docs/skills/` es la fuente canonica de skills portables para este workspace.
 
@@ -33,3 +34,5 @@ bun scripts/agent-context-audit.ts
 
 - `aos-orquestar/`: proponer o ejecutar un fan-out controlado con threads/subagentes AOS.
 - `aos-fanout/`: alias intensivo para usar todos los threads/subagentes seguros y volver a serial cuando no conviene.
+- `aos-plan-implementar/`: crear/revisar/ejecutar planes acotados eligiendo un solo motor principal.
+- `aos-evaluar-skills/`: auditar que partes del sistema agentico conviene promover a skills hibridas.

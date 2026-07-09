@@ -21,10 +21,8 @@ function fullPath(path: string) {
 }
 
 const requiredAosPiPrompts = [
-  "aos-cerrar.md",
-  "aos-checkpoint.md",
+  "aos-evaluar-skills.md",
   "aos-fanout.md",
-  "aos-gol.md",
   "aos-guardar-sesion.md",
   "aos-help.md",
   "aos-orquestar.md",
@@ -39,7 +37,7 @@ const requiredAosPiExtensions = [
 const requiredAosToolCommands = [
   "aos-compact",
   "aos-continuar",
-  "aos-gol",
+  "aos-plan-implementar",
   "aos-skills",
   "aos-status",
   "aos-sync",

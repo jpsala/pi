@@ -47,3 +47,7 @@ Tras modificar skills:
 bun scripts/context-index.ts
 bun scripts/agent-context-audit.ts
 ```
+## Dynamic Workflows Pilot
+
+- `aos-dynamic-workflows-pilot/`: piloto opt-in para comparar `pi-dynamic-workflows` contra `taskflow` sin volverlo default.
+- `.agents/skills` se mantiene como compatibility path estable; no borrarlo para limpiar slash porque algunos hosts cachean paths.
