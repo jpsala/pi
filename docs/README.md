@@ -26,7 +26,8 @@ No abrir todo `docs/` por defecto.
 - `topics/`: runbooks y how-tos recuperables.
 - `tracks/`: trabajo vivo retomable.
 - `skills/`: skills locales portables.
-- `../pi-extensions/README.md`: extensiones Pi portables e instalables en otras PCs.
+- `../pi-extensions/README.md`: extensiones/configs Pi propias de JP portables a otras PCs.
+- `C:/dev/os/docs/topics/pi-extension-stack.md`: inventario global y flow de herramientas Pi (fuente canonica externa).
 
 ## Regla
 

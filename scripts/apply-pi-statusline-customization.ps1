@@ -187,7 +187,7 @@ const COMPACT_EXTENSION_ID = `${EXTENSION_ID}.compact`;
 '@
 
   Replace-Regex $UsageExtensionTarget 'import \{ (?:formatCompactStatus, )?formatStatus, unavailableStatus \} from "\.\./src/codex-usage/format";' $importReplacement "codex-usage import compact formatter"
-  Replace-Regex $UsageExtensionTarget 'const EXTENSION_ID = "codex-usage";\r?\n(?:const COMPACT_EXTENSION_ID = `\$\{EXTENSION_ID\}\.compact`;\r?\n)?' $constReplacement "codex-usage compact status key"
+  Replace-Regex $UsageExtensionTarget 'const EXTENSION_ID = "codex-usage";\r?\n(?:const COMPACT_EXTENSION_ID = `\$\{EXTENSION_ID\}\.compact`;\r?\n?)?' ($constReplacement + "`n") "codex-usage compact status key"
   Replace-Regex $UsageExtensionTarget '(?s)\tprivate stop\(ctx: ExtensionContext\): void \{.*?\r?\n\t\}\r?\n\r?\n\tprivate enqueuePreferenceOperation' $stopReplacement "codex-usage stop clears compact status"
   Replace-Regex $UsageExtensionTarget '(?s)\tprivate async refresh\(ctx = this\.ctx, modelId = ctx\?\.model\?\.id, generation = this\.generation\): Promise<void> \{.*?\r?\n\t\}\r?\n\r?\n\tprivate renderLast' $refreshReplacement "codex-usage compact refresh method"
   Replace-Regex $UsageExtensionTarget '(?s)\tprivate renderLast\(ctx: ExtensionContext\): boolean \{.*?\r?\n\t\}\r?\n\r?\n\tprivate savePreferences' $renderLastReplacement "codex-usage compact renderLast method"
@@ -197,6 +197,30 @@ function Patch-CodexUsage {
   Patch-CodexUsageExtension
 
   $percentReplacement = @'
+const ACTIVE_DAYS_PER_WEEK = 6;
+const WEEK_SECONDS = 7 * 24 * 60 * 60;
+const DAY_SECONDS = 24 * 60 * 60;
+
+function clamp(value: number, min: number, max: number): number {
+	return Math.min(max, Math.max(min, value));
+}
+
+function formatBudgetCushionDays(theme: Theme, usage: UsageSnapshot): string | null {
+	const left7d = usage.leftPercent["7d"];
+	const reset7d = usage.resetInSeconds["7d"];
+	if (left7d === null || reset7d === null || Number.isNaN(reset7d)) return null;
+
+	const used7d = 100 - left7d;
+	const elapsedSeconds = clamp(WEEK_SECONDS - reset7d, 0, WEEK_SECONDS);
+	const elapsedActiveDays = clamp(elapsedSeconds / DAY_SECONDS, 0, ACTIVE_DAYS_PER_WEEK);
+	const expectedUsed = clamp(elapsedActiveDays * (100 / ACTIVE_DAYS_PER_WEEK), 0, 100);
+	const dailyBudget = 100 / ACTIVE_DAYS_PER_WEEK;
+	const rounded = Math.round(((expectedUsed - used7d) / dailyBudget) * 10) / 10;
+	const cushionDays = Object.is(rounded, -0) ? 0 : rounded;
+	const color = usage.isLimited || cushionDays <= -0.9 ? "error" : cushionDays <= -0.3 ? "warning" : "success";
+	return theme.fg(color, `colchón:${cushionDays > 0 ? "+" : ""}${cushionDays.toFixed(1)}d`);
+}
+
 function formatPercent(theme: Theme, leftPercent: number | null, mode: PercentMode): string {
 	if (leftPercent === null) return theme.fg("muted", "--");
 
@@ -223,15 +247,17 @@ export function formatCompactStatus(ctx: ExtensionContext, usage: UsageSnapshot,
 	const usageText = windowNames
 		.map(name => `${theme.fg("dim", `${name}:`)}${formatCompactPercent(theme, usage.leftPercent[name], preferences.usageMode)}`)
 		.join(separator);
+	const cushion = formatBudgetCushionDays(theme, usage);
+	const cushionText = cushion ? `${separator}${cushion}` : "";
 	const reset = formatCountdown(usage.resetInSeconds[preferences.refreshWindow]);
 	const resetText = reset ? `${separator}${theme.fg("dim", `↺${preferences.refreshWindow}:${reset}`)}` : "";
-	return `${usageText}${resetText}`;
+	return `${usageText}${cushionText}${resetText}`;
 }
 
 export function unavailableStatus
 '@
 
-  Replace-Regex $UsageTarget '(?s)function formatPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n(?:function formatCompactPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n)?function formatCountdown' $percentReplacement "codex-usage compact percent"
+  Replace-Regex $UsageTarget '(?s)(?:const ACTIVE_DAYS_PER_WEEK = 6;.*?\r?\n\r?\n)?function formatPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n(?:function formatCompactPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n)?function formatCountdown' $percentReplacement "codex-usage compact percent"
   Replace-Regex $UsageTarget '(?s)(?:export function formatCompactStatus\(ctx: ExtensionContext, usage: UsageSnapshot, preferences: Preferences\): string \{.*?\r?\n\}\r?\n\r?\n)?export function unavailableStatus' $compactReplacement "codex-usage compact status"
 }
 

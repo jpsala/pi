@@ -7,69 +7,67 @@ triggers:
   - paquetes pi
   - pi packages
   - sincronizar pi
-  - web_search
-  - web_research
-  - codemapper
-  - fff
-  - fffind
-  - ffgrep
-  - taskflow
-  - pi-code-planner
-  - advisor
-  - pi-lens
-  - pi-footer
-  - image_generate
+  - windows-input
+  - pi footer
+  - pi statusline
+  - tool display
+  - hide messages
+  - webui
+  - pi-dynamic-workflows
 primary_refs:
-  - C:/Users/jpsal/.pi/agent/settings.json
-  - C:/Users/jpsal/.pi/agent/extensions/pi-footer.json
-  - docs/reference/pi-extension-stack-inventory.md
-  - docs/topics/pi-agentic-os.md
-  - docs/topics/agent-tool-routing.md
-  - docs/reference/tool-routing.yaml
-  - docs/OS_PLAYBOOK.md
+  - pi-extensions/README.md
+  - docs/topics/windows-input-extension.md
+  - docs/topics/pi-statusline-customization.md
+  - C:/dev/os/docs/topics/pi-extension-stack.md
+  - C:/dev/os/docs/topics/agent-tool-routing.md
+  - C:/dev/os/docs/reference/tool-routing.yaml
 ---
 
-# Pi Extension Stack
+# Pi Extension Stack Local
 
-Referencia de entrada para elegir herramientas Pi. El inventario completo de
-paquetes globales vive en `docs/reference/pi-extension-stack-inventory.md`.
-No copiar esa lista a repos destino: es configuracion global de la maquina de
-JP, no dependencia core de AOS.
+`C:/dev/pi` no es el inventario global de paquetes Pi. Este repo guarda solo
+fuentes y snapshots propios de JP para restaurar o portar configuraciones Pi.
+El flow de herramientas, routing y lista global versionada viven en `C:/dev/os`.
+
+## Fuentes Canonicas
+
+| Necesidad | Abrir |
+| --- | --- |
+| Elegir herramientas Pi, paquetes globales, `advisor`, taskflow, web, lens | `C:/dev/os/docs/topics/pi-extension-stack.md` |
+| Routing de motores, `pi_long_task`, `dgoal`, `pi-dynamic-workflows` | `C:/dev/os/docs/topics/agent-tool-routing.md` |
+| Instalar/restaurar piezas propias de JP desde este repo | `pi-extensions/README.md` |
+| Windows-like input editor | `docs/topics/windows-input-extension.md` |
+| Footer/statusline compacto | `docs/topics/pi-statusline-customization.md` |
+
+## Piezas Propias De Este Repo
+
+- `pi-extensions/windows-input.ts`: fuente portable de la extension global
+  `windows-input`; instalar con `scripts/install-windows-input.ps1` o `.sh`.
+- `pi-extensions/pi-footer.json`: snapshot de footer/statusline compacto.
+- `scripts/apply-pi-statusline-customization.ps1` / `.sh`: restauran footer y
+  parches locales de statusline/codex usage.
+- `pi-extensions/pi-tool-display.json` y `pi-extensions/pi-hide-messages.json`:
+  UX compacta de tools/WebUI.
+- `scripts/apply-pi-webui-ux.ps1` / `.sh`: restauran configs de UX compacta y
+  parche WebUI cuando JP lo pide.
+
+No copiar estas piezas a `.pi/extensions/` por defecto si ya existe una copia
+global: Pi puede cargar duplicados y crear comandos sufijados.
 
 ## Regla Operativa
 
-1. Elegir la herramienta mas chica que cierre el objetivo.
-2. Usar web cuando conocimiento externo/versionado evite adivinar.
-3. Antes de instalar/remover paquetes globales, pedir permiso y hacer backup de
-   `C:/Users/jpsal/.pi/agent/settings.json`.
-4. Despues de cambios Pi, correr `/reload` y smoke-testear la capacidad tocada.
+1. Para decidir o comparar herramientas, usar `C:/dev/os` como fuente.
+2. Para instalar/remover paquetes globales o CLIs, pedir permiso explicito y
+   respaldar `C:/Users/jpsal/.pi/agent/settings.json`.
+3. Para restaurar una pieza local, ejecutar primero el modo status del script si
+   existe; aplicar solo la pieza pedida.
+4. Despues de cambios Pi, correr `/reload` y smoke-testear solo la capacidad
+   tocada. No tocar cuentas reales, prod, deploy ni datos privados sin permiso.
 
-## Superficie Operativa AOS
+## Pi Dynamic Workflows
 
-| Nivel | Tools | Uso |
-| --- | --- | --- |
-| Core diario | `fffind`, `ffgrep`, CodeMapper (`map/search/outline`), `ask_user`, `advisor`, `lens_diagnostics` | Orientacion, decisiones humanas, segundo juicio y feedback tecnico. |
-| Orquestacion | `taskflow`, `pi-council`, `pi-link` | Auditorias/reviews paralelas con ownership claro; no para trabajo serial chico. |
-| Piloto opt-in | `pi-dynamic-workflows` via `docs/skills/aos-dynamic-workflows-pilot/` si se instala | Comparar fan-out pesado/deep research/adversarial review contra `taskflow`; no dejar triggers genericos activos. |
-| Ejecucion larga | `pi-code-planner`, `/until-done`, `pi_long_task`; `pi-dgoal` solo experimental | Elegir **uno** desde `/aos-plan-implementar`; para fleet updates AOS usar `pi_long_task`/`/aos-fleet-update`, no `dgoal`. |
-| Research externo | `web_search`, `fetch_content`, `web_answer`, `web_research`, skill `librarian` | Usar para docs, releases, issues, APIs, internals OSS; no enviar secretos. |
-| Visual/UI | `pi-chrome`, `cua-driver`, `image_generate`, `aos-impeccable` | UI, browser signed-in y assets; pedir aprobacion para cuentas reales/envios/material privado. |
-| Global/optional | footer, Telegram/Discord remotes, MCP, RTK, themes, shims | Entorno de JP; no copiarlos como dependencia AOS ni usarlos si no aportan. |
-
-
-
-## Fleet Updates AOS
-
-Para actualizar varias repos AOS en orden, usar `/aos-fleet-update` como
-superficie local. El comando genera un `pi_long_task` serial con TODO markdown,
-allowlist de paths AOS, checks por repo y commits locales opcionales.
-
-No usar `dgoal` para este caso mientras su startup gate dependa de confirmacion
-modal fragil, fallback chino sin `pi-di18n`, y abandono por feedback vacio.
-
-## Pi Dynamic Workflows Trigger Seguro
-
-`pi-dynamic-workflows` queda explicito-only. Default seguro:
+Este repo no convierte `pi-dynamic-workflows` en default. Si se usa, seguir el
+playbook upstream y mantenerlo opt-in:
 
 ```json
 {
@@ -78,59 +76,23 @@ modal fragil, fallback chino sin `pi-di18n`, y abandono por feedback vacio.
 }
 ```
 
-Guardar `C:/Users/jpsal/.pi/workflows/settings.json` como JSON UTF-8 sin BOM. Si aparece `[workflows mode is ON]` al escribir mensajes normales, la config probablemente no fue parseada y el paquete volvio al trigger default `workflow`; reescribir el JSON sin BOM, correr `/reload` y verificar `/workflows-trigger status`.
-
-## Research / Web
-
-- `web_search`: descubrir fuentes con 2-4 queries variadas.
-- `fetch_content`: leer fuentes candidatas antes de decidir.
-- `web_answer`: factual chico con grounding rapido.
-- `web_research`: informe asincronico para temas amplios.
-- `librarian`: internals de librerias open-source con permalinks.
-
-Playbook: `docs/topics/conversational-research.md`.
-
-## Busqueda Local Y Codigo
-
-- `fffind`/`ffgrep`: ubicar archivos o texto arbitrario rapido.
-- CodeMapper `map/search/outline/expand/path`: estructura, simbolos y relaciones.
-- `pi-lens`: LSP/diagnostics/AST; es feedback tecnico, no reemplaza checks del repo.
-
-## Planning Y Ejecucion
-
-Usar `/aos-plan-implementar` para elegir un motor principal. La matriz completa
-esta en `docs/topics/agent-tool-routing.md` y su policy verificable en
-`docs/reference/tool-routing.yaml`.
-
-- manual + Ponytail para cambios chicos;
-- planner para features con stages/worktree;
-- dgoal/until-done para objetivos largos acotados;
-- long-task para TODO secuencial claro;
-- taskflow/council para auditorias, reviews y fan-out.
-
-## UI / Browser / Computer Use
-
-`pi-chrome`, Cua Driver e image-gen son capacidades reales sobre la maquina o
-servicios externos. Aplican las reglas de `AGENTS.md`: avisar al iniciar un
-batch visible, no tocar cuentas/canales reales ni enviar datos privados sin
-permiso, y guardar evidencia reproducible.
-
-## Footer / Statusline
-
-`pi-footer` es la pieza correcta para ajustar statusline/footer. Config actual:
-`C:/Users/jpsal/.pi/agent/extensions/pi-footer.json`. Detalle completo en
-`docs/reference/pi-extension-stack-inventory.md`.
+Si aparece `[workflows mode is ON]` en mensajes normales, revisar
+`C:/Users/jpsal/.pi/workflows/settings.json` como JSON UTF-8 sin BOM, correr
+`/reload` y verificar `/workflows-trigger status`. `taskflow` sigue siendo el
+default AOS para fan-out salvo piloto explicito.
 
 ## Sincronizar Otra PC
 
-1. Comparar `C:/Users/jpsal/.pi/agent/settings.json`.
-2. Revisar paquetes en `~/.pi/agent/npm` y git skills/extensiones.
-3. Verificar extras: `C:\dev\pi`, API keys, CLIs opcionales, ffmpeg si aplica.
-4. Smoke-testear solo capacidades clave: `ask_user`, FFF, taskflow, footer y la
-   herramienta modificada.
+1. Abrir `pi-extensions/README.md` y el topic puntual (`windows-input` o
+   `pi-statusline-customization`).
+2. Ejecutar status del script correspondiente.
+3. Aplicar solo la configuracion solicitada.
+4. Ejecutar `/reload` en Pi y verificar el comando/capacidad tocada.
+5. Si hace falta elegir paquetes o revisar inventario global, volver a
+   `C:/dev/os`; no duplicar ese inventario aca.
 
-## Aprendizajes Recientes
+## Mantenimiento
 
-Solo guardar aca aprendizajes de runtime Pi o patrones agenticos genericos. No
-incluir fixes de producto, canales, credenciales ni datos downstream. El detalle
-historico completo quedo en `docs/reference/pi-extension-stack-inventory.md`.
+Guardar aca solo aprendizajes sobre extensiones/configs propias de JP. Promover
+criterios globales de uso de herramientas a `C:/dev/os` para evitar drift entre
+repos AOS.

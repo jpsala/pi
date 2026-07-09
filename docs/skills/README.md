@@ -11,8 +11,6 @@
 
 ## Contenido Actual
 
-- `aos-impeccable/`: skill local para trabajo de UI/frontend.
-- `aos-speckit-*/`: skills locales del workflow SpecKit.
 - `aos-help/`: mostrar comandos AOS disponibles y cuando usarlos.
 - `aos-perfect-os/`: auditar y optimizar un proyecto para agentes: contexto, docs, continuidad, comandos y audit.
 - `aos-align-os-project/`: actualizar/adoptar y auditar proyectos registrados para alinear mecanica y vision AOS.
@@ -30,7 +28,7 @@
 - `aos-evaluar-skills/`: auditar que partes del sistema agentico conviene promover a skills hibridas.
 - `aos-repo-commit-push/`: checklist para incluir cambios necesarios, commitear y pushear.
 
-Las herramientas Pi de pensamiento/implementacion (`taskflow`, `pi-code-planner`, `pi-task`, `advisor`, Ponytail, `dgoal`, `context-viewer`, `pi-lens`) se documentan en `docs/topics/pi-extension-stack.md`, no como skills locales separadas.
+Las herramientas Pi de pensamiento/implementacion (`taskflow`, `pi-code-planner`, `pi-task`, `advisor`, Ponytail, `dgoal`, `context-viewer`, `pi-lens`) se documentan en `docs/topics/pi-extension-stack.md` y en `C:/dev/os`, no como skills locales separadas.
 
 ## Validacion
 

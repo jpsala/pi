@@ -31,7 +31,7 @@ Mantener una sola linea compacta con:
 Formato esperado aproximado:
 
 ```text
-gpt-5.5 • think:medium • dir:pi • git:main • (+0,-0) • ctx:30.6% • 272k • cache:2.3M • link: offline • win-input • chrome:∞ • usage:5h:86% · 7d:33% · ↺7d:3d0h
+gpt-5.5 • think:medium • dir:pi • git:main • (+0,-0) • ctx:30.6% • 272k • cache:2.3M • link: offline • win-input • chrome:∞ • usage:5h:86% · 7d:33% · colchón:+1.3d · ↺7d:3d0h
 ```
 
 ## Archivos canonicos en este repo
@@ -71,7 +71,7 @@ Validado en `C:\dev\pi` y `C:\dev\dictation-tauri` tras `/reload`.
 Caso `dictation-tauri` con `pi-lens` project-local:
 
 ```text
-gpt-5.5 • think:high • dir:dictation-tauri • git:main • (+12199,-1241) • ctx:42.7% • 272k • cache:3.6M • link: offline • win-input • chrome:∞ • usage:5h:82% · 7d:33% · ↺7d:3d0h
+gpt-5.5 • think:high • dir:dictation-tauri • git:main • (+12199,-1241) • ctx:42.7% • 272k • cache:3.6M • link: offline • win-input • chrome:∞ • usage:5h:82% · 7d:33% · colchón:+1.3d · ↺7d:3d0h
 LSP Failed: rust
 ```
 
@@ -140,8 +140,9 @@ Destino parcheado:
 Cambios:
 
 1. Compactar el status `codex-usage.compact`.
-2. No publicar el status completo `codex-usage` en estado normal, para evitar una segunda linea duplicada con la misma informacion en otro formato.
-3. `pi-footer` ademas filtra cualquier valor residual tipo `Codex 5h NN% 7d NN%` si aparece bajo otra key.
+2. Agregar `colchón:+/-N.Nd`, dias equivalentes de presupuesto normal acumulado contra el ritmo esperado de 6 dias activos: `0.0d` es ir justo al plan, positivo es margen y negativo es estar pasado.
+3. No publicar el status completo `codex-usage` en estado normal, para evitar una segunda linea duplicada con la misma informacion en otro formato.
+4. `pi-footer` ademas filtra cualquier valor residual tipo `Codex 5h NN% 7d NN%` si aparece bajo otra key.
 
 Antes:
 
@@ -153,7 +154,7 @@ Codex 5h 12% 7d 66%
 Despues:
 
 ```text
-5h:88% · 7d:34% · ↺7d:3d0h
+5h:88% · 7d:34% · colchón:+1.3d · ↺7d:3d0h
 ```
 
 Nota: los porcentajes siguen respetando la preferencia de `pi-codex-usage` (`left` o `used`), pero el compact status no imprime `left`/`used` para ahorrar espacio. Si se cambia a `used`, recordar semanticamente que el porcentaje mostrado pasa a ser usado.

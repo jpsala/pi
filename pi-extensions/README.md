@@ -1,8 +1,10 @@
 # Pi Extensions
 
-Extensiones fuente para instalar en Pi en otras maquinas.
+Extensiones/configs fuente para instalar o restaurar Pi en otras maquinas.
 
-> Importante: los archivos fuente viven aca para ser portables. No se colocan en `.pi/extensions/` por defecto porque esa carpeta se auto-carga cuando el proyecto esta confiado. Si tambien existe una copia global, Pi puede cargar dos wrappers y crear comandos sufijados.
+> Importante: este repo guarda piezas propias de JP (`windows-input`, footer/statusline y UX compacta). El inventario global de paquetes y el flow de herramientas viven en `C:/dev/os/docs/topics/pi-extension-stack.md` y `C:/dev/os/docs/topics/agent-tool-routing.md`; no duplicarlos aca.
+>
+> Los archivos fuente no se colocan en `.pi/extensions/` por defecto porque esa carpeta se auto-carga cuando el proyecto esta confiado. Si tambien existe una copia global, Pi puede cargar dos wrappers y crear comandos sufijados.
 
 ## Para pedir instalacion en otra PC
 
@@ -53,7 +55,7 @@ Luego ejecutar `/reload` dentro de Pi.
 
 ## UX compacta de tools y WebUI
 
-Esta repo guarda tambien la configuracion de legibilidad para reducir ruido en Pi:
+Esta repo guarda tambien la configuracion de legibilidad para reducir ruido en Pi. Es configuracion local de JP, no dependencia AOS para repos destino:
 
 - `pi-extensions/pi-tool-display.json`: `read/search/MCP` ocultos por defecto y `bash` en resumen.
 - `pi-extensions/pi-hide-messages.json`: mantiene visibles los ultimos 12 mensajes.

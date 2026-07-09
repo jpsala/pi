@@ -248,7 +248,7 @@ replace_regex(
 )
 replace_regex(
     usage_ext,
-    r'''const EXTENSION_ID = "codex-usage";\r?\n(?:const COMPACT_EXTENSION_ID = `\$\{EXTENSION_ID\}\.compact`;\r?\n)?''',
+    r'''const EXTENSION_ID = "codex-usage";\r?\n(?:const COMPACT_EXTENSION_ID = `\$\{EXTENSION_ID\}\.compact`;\r?\n?)?''',
     usage_ext_const_replacement + "\n",
     "codex-usage compact status key",
 )
@@ -271,7 +271,31 @@ replace_regex(
     "codex-usage compact renderLast method",
 )
 
-usage_percent_replacement = '''function formatPercent(theme: Theme, leftPercent: number | null, mode: PercentMode): string {
+usage_percent_replacement = '''const ACTIVE_DAYS_PER_WEEK = 6;
+const WEEK_SECONDS = 7 * 24 * 60 * 60;
+const DAY_SECONDS = 24 * 60 * 60;
+
+function clamp(value: number, min: number, max: number): number {
+\treturn Math.min(max, Math.max(min, value));
+}
+
+function formatBudgetCushionDays(theme: Theme, usage: UsageSnapshot): string | null {
+\tconst left7d = usage.leftPercent["7d"];
+\tconst reset7d = usage.resetInSeconds["7d"];
+\tif (left7d === null || reset7d === null || Number.isNaN(reset7d)) return null;
+
+\tconst used7d = 100 - left7d;
+\tconst elapsedSeconds = clamp(WEEK_SECONDS - reset7d, 0, WEEK_SECONDS);
+\tconst elapsedActiveDays = clamp(elapsedSeconds / DAY_SECONDS, 0, ACTIVE_DAYS_PER_WEEK);
+\tconst expectedUsed = clamp(elapsedActiveDays * (100 / ACTIVE_DAYS_PER_WEEK), 0, 100);
+\tconst dailyBudget = 100 / ACTIVE_DAYS_PER_WEEK;
+\tconst rounded = Math.round(((expectedUsed - used7d) / dailyBudget) * 10) / 10;
+\tconst cushionDays = Object.is(rounded, -0) ? 0 : rounded;
+\tconst color = usage.isLimited || cushionDays <= -0.9 ? "error" : cushionDays <= -0.3 ? "warning" : "success";
+\treturn theme.fg(color, `colchón:${cushionDays > 0 ? "+" : ""}${cushionDays.toFixed(1)}d`);
+}
+
+function formatPercent(theme: Theme, leftPercent: number | null, mode: PercentMode): string {
 \tif (leftPercent === null) return theme.fg("muted", "--");
 
 \tconst color = leftPercent <= 10 ? "error" : leftPercent <= 25 ? "warning" : "success";
@@ -294,15 +318,17 @@ usage_compact_replacement = '''export function formatCompactStatus(ctx: Extensio
 \tconst usageText = windowNames
 \t\t.map(name => `${theme.fg("dim", `${name}:`)}${formatCompactPercent(theme, usage.leftPercent[name], preferences.usageMode)}`)
 \t\t.join(separator);
+\tconst cushion = formatBudgetCushionDays(theme, usage);
+\tconst cushionText = cushion ? `${separator}${cushion}` : "";
 \tconst reset = formatCountdown(usage.resetInSeconds[preferences.refreshWindow]);
 \tconst resetText = reset ? `${separator}${theme.fg("dim", `↺${preferences.refreshWindow}:${reset}`)}` : "";
-\treturn `${usageText}${resetText}`;
+\treturn `${usageText}${cushionText}${resetText}`;
 }
 
 export function unavailableStatus'''
 replace_regex(
     usage,
-    r'''function formatPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n(?:function formatCompactPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n)?function formatCountdown''',
+    r'''(?:const ACTIVE_DAYS_PER_WEEK = 6;.*?\r?\n\r?\n)?function formatPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n(?:function formatCompactPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n)?function formatCountdown''',
     usage_percent_replacement,
     "codex-usage compact percent",
 )
