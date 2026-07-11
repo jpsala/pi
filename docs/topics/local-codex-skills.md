@@ -70,11 +70,11 @@ No abrirlo durante trabajo normal del repo ni durante `guardar sesion`/`nueva se
 
 ## Regla Canonica
 
-`docs/skills/` es la fuente de verdad de las skills locales del repo.
+Las skills AOS portables se consultan en `C:/dev/os/docs/skills/`; este repo conserva en `docs/skills/` solo aliases locales no colisionantes.
 
-`.agents/skills` existe solo como compatibilidad tecnica y debe apuntar por junction o symlink a `docs/skills/` cuando el host debe descubrir skills.
+`.agents/skills` existe solo como compatibilidad tecnica y debe apuntar por junction o symlink a la superficie local mientras esta no este vacia.
 
-`docs/skills/` siempre queda como canon. `.agents/skills` es un compatibility path estable hacia ese canon; no se borra para limpiar la paleta porque Pi/Codex pueden cachear paths de skills.
+No recrear localmente una skill portable para limpiar la paleta: el path canonico es `C:/dev/os/docs/skills/`.
 
 No duplicar la misma skill en dos carpetas reales.
 
@@ -173,24 +173,9 @@ Cuando JP pida revisar que del sistema agentico se puede pasar a skills:
 
 | Comando o grupo                                                       | Skill                                                          | Comportamiento                                                                                                 |
 | --------------------------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `os help`, `ayuda os`, `comandos os`                                  | `docs/skills/aos-help/`                                        | Muestra comandos OS y cuando usarlos sin ejecutar cambios.                                                     |
-| `perfect os`, `dejar en condiciones`                                  | `docs/skills/aos-perfect-os/`                                  | Optimiza un repo para agentes: contexto, docs, continuidad, comandos y audit.                                  |
-| `init os`                                                             | `docs/skills/aos-init-os/`                                     | Inicializa AOS minimo en un proyecto nuevo o sin capa agentica.                                                |
-| `adopt os`                                                            | `docs/skills/aos-adopt-os/`                                    | Fusiona AOS en un repo existente preservando reglas y memoria local.                                           |
-| `update os`                                                           | `docs/skills/aos-update-os/`                                   | Actualiza una instalacion downstream contra el upstream sin copiar piezas manager-only.                        |
-| `aos-sigamos`                                                         | `docs/skills/aos-sigamos/`                                     | Continua con lo siguiente en la misma sesion, sin lote formal.                                                 |
-| `avancemos`, `ejecutar lote`, siguiente paso                          | `docs/skills/aos-sigamos/`                                     | Continua en esta sesion con el siguiente paso concreto; para loops largos usar tooling explicito.              |
-| `aos-orquestar`, `orquestá`, `usá threads`, `spawn agents`            | `docs/skills/aos-orquestar/`                                   | Propone o ejecuta fan-out controlado con threads/subagentes, con confirmacion si no fue pedido explicitamente. |
-| `aos-fanout`, `aos-threads`, `/aos-fanout`                            | `docs/skills/aos-fanout/`                                      | Alias intensivo: maximiza paralelismo seguro y vuelve a serial si no conviene.                                 |
-| `aos-dynamic-workflows-pilot`, `probar pi-dynamic-workflows`          | `docs/skills/aos-dynamic-workflows-pilot/`                     | Piloto opt-in para comparar `pi-dynamic-workflows` contra `taskflow` sin volverlo default.                     |
-| `aos-fleet-update`, `actualizar repos`, `actualizar nuestras repos`       | `docs/skills/aos-fleet-update/`                              | Genera un `pi_long_task` serial para actualizar repos AOS con allowlist, checks y commits locales opcionales. |
-| Pi planning tools, advisor, taskflow, dgoal, pi-lens, pi-code-planner | `docs/topics/pi-extension-stack.md`                            | No es skill nueva: topic/runbook canonico para elegir herramientas de pensamiento/implementación.              |
-| `guardar sesion`, `documentar sesion`                                 | `docs/skills/aos-guardar-sesion/`                              | Persiste valor durable en docs vivos, sin handoff ni thread nuevo.                                             |
-| `aos-checkpoint`, `persistir estado`, `cerrar sesion`                 | `docs/skills/aos-guardar-sesion/`                              | Aliases de guardar sesion; `cerrar` agrega solo sintesis final.                                                |
-| `/aos-continuar [objetivo]`                                           | `.pi/extensions/aos-tools.ts` + `.pi/prompts/aos-continuar.md` | Abre sesion Pi nueva y pasa un prompt de continuidad desde docs vivos; JP debe haber guardado antes.           |
-| `realinear os`                                                        | `docs/skills/aos-realinear-os/`                                | Audita y repara la capa agentica sin tocar producto salvo pedido.                                              |
-| `evaluar skills`, `pasar a skills`                                    | `docs/skills/evaluar-skills/`                                  | Audita candidatos del sistema agentico para promoverlos a skills hibridas.                                     |
-| `hacer commits`, `push`, `publicar cambios`, `repo commit push`       | `docs/skills/aos-repo-commit-push/`                            | Revisa inclusion, valida, commitea y pushea el batch del repo.                                                 |
+| Comandos AOS portables (`aos-*`) | `C:/dev/os/docs/skills/` | Fuente canonica upstream; no duplicar localmente. |
+| Pi planning tools, advisor, taskflow, dgoal, pi-lens, pi-code-planner | `docs/topics/pi-extension-stack.md` | No es skill nueva: topic/runbook canonico para elegir herramientas de pensamiento/implementación. |
+| `/aos-continuar [objetivo]` | `.pi/extensions/aos-tools.ts` + `.pi/prompts/aos-continuar.md` | Abre sesion Pi nueva y pasa un prompt de continuidad desde docs vivos; JP debe haber guardado antes. |
 
 ## Validacion
 
@@ -208,11 +193,8 @@ powershell -ExecutionPolicy Bypass -File scripts/ensure-skills-link.ps1
 1. Validar una skill o todas las necesarias:
 
 ```powershell
-python C:\dev\agent-infra\rules\skills\.system\skill-creator\scripts\quick_validate.py docs/skills/aos-sigamos
-python C:\dev\agent-infra\rules\skills\.system\skill-creator\scripts\quick_validate.py docs/skills/aos-checkpoint
-python C:\dev\agent-infra\rules\skills\.system\skill-creator\scripts\quick_validate.py docs/skills/aos-cerrar-sesion
-python C:\dev\agent-infra\rules\skills\.system\skill-creator\scripts\quick_validate.py docs/skills/aos-realinear-os
-python C:\dev\agent-infra\rules\skills\.system\skill-creator\scripts\quick_validate.py docs/skills/evaluar-skills
+python C:\dev\agent-infra\rules\skills\.system\skill-creator\scripts\quick_validate.py C:/dev/os/docs/skills/aos-sigamos
+python C:\dev\agent-infra\rules\skills\.system\skill-creator\scripts\quick_validate.py C:/dev/os/docs/skills/aos-realinear-os
 ```
 
 1. Regenerar indice y correr audit:
@@ -224,8 +206,8 @@ bun run context:audit
 
 ## Mantenimiento
 
-- Editar siempre `docs/skills/<nombre>/`.
-- Si se agrega una skill nueva, indexarla desde `docs/skills/README.md`; actualizar este topic solo si cambia el criterio de diseño o mantenimiento.
+- Las skills portables se editan upstream en `C:/dev/os/docs/skills/<nombre>/`.
+- Si se agrega una skill local no colisionante, indexarla desde `docs/skills/README.md`; actualizar este topic solo si cambia el criterio de diseño o mantenimiento.
 - Si una skill necesita metadata UI, mantener `agents/openai.yaml` alineado con `SKILL.md`.
 - Preferir skills hibridas cortas cuando ya existe una fuente canonica confiable.
 - Si Git empieza a detectar ruido por la compatibilidad tecnica, mantener `.agents/skills/` ignorado.

@@ -16,7 +16,7 @@ primary_refs:
   - docs/reference/tool-routing.yaml
   - docs/topics/pi-agentic-os.md
   - docs/topics/pi-extension-stack.md
-  - docs/skills/aos-plan-implementar/SKILL.md
+  - C:/dev/os/docs/skills/aos-plan-implementar/SKILL.md
   - .pi/extensions/aos-tools.ts
 ---
 
@@ -59,6 +59,24 @@ es cambio chico; validar con <check>`.
 | Prod/deploy/envios/datos/destructivo | el que corresponda | ask_user | confirmacion explicita |
 
 La version verificable vive en `docs/reference/tool-routing.yaml`.
+
+## Routing GPT-5.6
+
+Elegir modelo y esfuerzo segun el tipo de trabajo, despues de aplicar los gates
+de seguridad y verificacion:
+
+| Trabajo | Ruta |
+| --- | --- |
+| Pi normal y planificacion compacta | Sol medium |
+| Planificacion, arquitectura, advisor y conformidad | Sol high |
+| Trabajo mecanico barato | Luna medium |
+| Implementacion acotada en background | Luna xhigh; reintentar con Luna max |
+| Implementacion interactiva sensible a latencia | Terra high |
+| Trabajo de alta garantia | Terra max, validado por Sol xhigh |
+
+Tests, conformidad y riesgo prevalecen sobre heuristicas de costo. Cuando esta
+ruta implique cambiar settings, recargar Pi o abrir una sesion nueva segun
+corresponda para que el cambio tome efecto.
 
 ## Nesting Permitido
 

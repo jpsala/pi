@@ -4,29 +4,16 @@
 
 ## Regla
 
-- No duplicar skills en dos carpetas reales.
-- `.agents/skills` existe solo como compatibilidad tecnica y debe apuntar por junction a `docs/skills/` cuando el host debe descubrir skills.
-- Si se agrega o modifica una skill, editar `docs/skills/<nombre>/`.
-- Si una skill es operativa del sistema, documentarla tambien en topics/working memory/decisions cuando cambie el comportamiento durable.
+- Las skills AOS portables canonicas viven upstream en `C:/dev/os/docs/skills/`; no duplicarlas localmente.
+- `docs/skills/` conserva solo superficie local no colisionante (incluidos aliases legacy que Pi aun pueda descubrir).
+- `.agents/skills` existe solo como compatibilidad tecnica y apunta por junction a la superficie local cuando esta no esta vacia.
+- Si una regla propia de Pi cambia, documentarla en los topics locales; no forkear una skill portable para conservarla.
 
 ## Contenido Actual
 
-- `aos-help/`: mostrar comandos AOS disponibles y cuando usarlos.
-- `aos-perfect-os/`: auditar y optimizar un proyecto para agentes: contexto, docs, continuidad, comandos y audit.
-- `aos-align-os-project/`: actualizar/adoptar y auditar proyectos registrados para alinear mecanica y vision AOS.
-- `aos-init-os/`, `aos-adopt-os/`, `aos-update-os/`: inicializar, adoptar o actualizar AOS en repos destino.
-- `aos-plan-implementar/`: crear, revisar y ejecutar un plan acotado eligiendo un solo motor principal (`manual`, planner, dgoal, until-done, long-task o taskflow).
-- `aos-sigamos/`: continuar con lo siguiente en la misma sesion, sin lote formal.
-- `aos-orquestar/`: proponer o ejecutar un fan-out controlado con taskflow/subagentes disponibles.
-- `aos-fanout/`: alias intensivo para maximizar orquestacion segura y volver a serial cuando no conviene.
-- `aos-dynamic-workflows-pilot/`: piloto opt-in para comparar `pi-dynamic-workflows` contra `taskflow` sin volverlo default.
-- `aos-fleet-update/`: lote serial multi-repo con `pi_long_task`, allowlist, checks y commits locales opcionales.
-- `aos-guardar-sesion/`: guardar lo valioso de la sesion en docs vivos.
-- `aos-checkpoint/` y `aos-cerrar-sesion/`: aliases legados de `aos-guardar-sesion/`.
+- Las skills operativas AOS (`aos-*`) se consultan en `C:/dev/os/docs/skills/`.
+- La superficie local restante contiene solo aliases legacy no colisionantes para discovery compatible.
 - `/aos-continuar` vive en el adapter Pi (`.pi/extensions/aos-tools.ts`): abre sesion nueva con prompt de continuidad despues de que JP guardo sesion.
-- `aos-realinear-os/`: auditoria y reparacion de la capa agentica.
-- `aos-evaluar-skills/`: auditar que partes del sistema agentico conviene promover a skills hibridas.
-- `aos-repo-commit-push/`: checklist para incluir cambios necesarios, commitear y pushear.
 
 Las herramientas Pi de pensamiento/implementacion (`taskflow`, `pi-code-planner`, `pi-task`, `advisor`, Ponytail, `dgoal`, `context-viewer`, `pi-lens`) se documentan en `docs/topics/pi-extension-stack.md` y en `C:/dev/os`, no como skills locales separadas.
 
@@ -35,7 +22,7 @@ Las herramientas Pi de pensamiento/implementacion (`taskflow`, `pi-code-planner`
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/toggle-skills-link.ps1 status
 powershell -ExecutionPolicy Bypass -File scripts/ensure-skills-link.ps1
-python C:\dev\agent-infra\rules\skills\.system\skill-creator\scripts\quick_validate.py docs/skills/<nombre>
+python C:\dev\agent-infra\rules\skills\.system\skill-creator\scripts\quick_validate.py C:/dev/os/docs/skills/<nombre>
 bun run context:index
 bun run context:audit
 ```
