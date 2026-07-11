@@ -2,7 +2,7 @@
 
 Generated cache. Do not edit by hand.
 
-Generated: 2026-07-09T23:58:53.862Z
+Generated: 2026-07-11T02:47:41.940Z
 
 ## Topics
 
@@ -36,9 +36,8 @@ Generated: 2026-07-09T23:58:53.862Z
 
 ## Pi Resources
 
-- Prompts: aos-adopt-os, aos-align-os-project, aos-cerrar, aos-checkpoint, aos-evaluar-skills, aos-fanout, aos-gol, aos-guardar-sesion, aos-help, aos-init-os, aos-orquestar, aos-perfect-os, aos-realinear, aos-sigamos, aos-update-os
-- Project extensions: aos-checkpoint-nudge.ts, aos-tools.ts
-- Global extensions: codex-usage-report.ts, windows-input.ts
+- Prompts: aos-gol
+- Global extensions: codex-usage-report.ts, pi-tool-runtime-trace.ts, windows-input.ts
 - Guidance: [pi-agentic-os](../topics/pi-agentic-os.md)
 
 ## Aliases
