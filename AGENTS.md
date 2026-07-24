@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Workspace `pi` de JP. Proposito del proyecto: pendiente de definir.
+Workspace `pi` de JP: laboratorio durable, portable y reversible para probar y mantener extensiones, hacks, APIs, Windows Input, footer/statusline y UX compacta.
 
 ## Lectura Inicial
 
@@ -10,7 +10,7 @@ Workspace `pi` de JP. Proposito del proyecto: pendiente de definir.
 4. Topic, track, spec o codigo puntual segun el pedido.
 5. `docs/README.md` solo si hace falta mapa documental.
 
-No abrir docs largos ni crear estructura de producto hasta que el objetivo del workspace este definido.
+No abrir docs largos ni crear estructura de producto: este workspace no es un runtime de producto.
 
 ## Reglas
 
@@ -19,6 +19,9 @@ No abrir docs largos ni crear estructura de producto hasta que el objetivo del w
 - No commitear secretos, `.env`, bases locales, exports privados ni datos sensibles.
 - No revertir cambios de usuario sin pedido explicito.
 - La memoria durable vive en `docs/`; no usar chats como fuente de verdad.
+- Para cada experimento Pi relevante, persistir paquete/version, estado, fuentes/patches/configs saneadas, scripts/toggles, API/cache si aplica, backup, smoke, riesgos y rollback suficientes para reproducirlo o volver atras.
+- `C:/dev/os` conserva `/flow`, routing e inventario global general; este repo registra las piezas Pi probadas o personalizadas aquí sin copiar secretos, `auth.json`, respuestas privadas de APIs ni `node_modules`.
+- `C:/dev/infra/docs/runbooks/notebook-operations.md` es la autoridad para operar o sincronizar la notebook. Si JP menciona `notebook`, `note`, `ASUS` o `ssh notebook`, abrir ese runbook y conservar aca solo el puntero, sin duplicar inventario, acceso ni reglas de sync.
 - Si aparecen archivos preexistentes de contexto, integrarlos, indexarlos, archivarlos o preguntar antes de borrarlos.
 - Limitar `init/adopt/update/perfect os` a la capa agentica salvo pedido explicito.
 - Para implementacion/review, `docs/topics/minimal-implementation.md` es politica liviana opcional: reusar lo existente y evitar dependencias/boilerplate innecesarios; Ponytail no es obligatorio ni dependencia local.
@@ -31,14 +34,11 @@ No abrir docs largos ni crear estructura de producto hasta que el objetivo del w
 
 ## Comandos AOS
 
-- `os help`: mostrar comandos OS disponibles y cuando usarlos.
-- `sigamos`: continuar en este hilo sin guardado obligatorio.
-- `gol` / `gol-lite`: ejecutar un lote chico verificable; no activa `/until-done` salvo pedido explicito.
-- `guardar sesion`: persistir valor durable en docs vivos sin handoff ni thread nuevo. `aos-checkpoint` y `aos-cerrar-sesion` son aliases.
-- `nueva sesion`: guardar y preparar handoff compacto para thread nuevo. `aos-continuar-sesion` es alias legado.
-- `nueva sesion con gol`: nueva sesion que arranca con `gol`.
-- `realinear os` / `aos-realinear-os`, `perfect os`, `init/adopt/update os`: usar `docs/topics/agentic-os-operations.md` y `docs/topics/os-quality.md`.
-- Skills/prompts canonicos usan prefijo `aos-*`; los nombres sin prefijo quedan como compatibilidad legacy cuando existan.
+- `/flow` es la única entrada diaria: `Pensar | Planear | Hacer | Cerrar`.
+- Planear declara `execution_route: economical | balanced | strong`; Hacer aplica esa ruta (`balanced` por defecto) y bloquea sin fallback si falta modelo o auth.
+- Hacer abre una sesión nueva enlazada con handoff documental revisable y ejecuta directamente allí, sin Agent ni auto-send; Cerrar es opcional si Hacer ya persistió el estado y `/new` queda para sesiones manuales.
+- `realinear os` / `aos-realinear-os` abre `docs/topics/agentic-os-operations.md`; perfect/init/adopt/update/align son operaciones manager-only desde `C:/dev/os`.
+- No mantener prompts de lifecycle, motores alternativos ni una copia local de `/flow`.
 
 ## Comandos De Contexto
 

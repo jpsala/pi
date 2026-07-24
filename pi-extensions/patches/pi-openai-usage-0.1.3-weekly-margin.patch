@@ -1,0 +1,152 @@
+diff --git a/src/format.ts b/src/format.ts
+index fa73afd..ad06ffc 100644
+--- a/src/format.ts
++++ b/src/format.ts
+@@ -19,6 +19,11 @@ const AUTH_FAILED_STATUS_TEXT = "Usage auth failed";
+ const REFRESH_FAILED_STATUS_TEXT = "Usage refresh failed";
+ const REFRESH_WARNING_TEXT = "refresh failed";
+ const VISIBLE_LINE_BREAK_PATTERN = /[\r\n\u2028\u2029]+/gu;
++const WEEKLY_WINDOW_SECONDS = 7 * 24 * 60 * 60;
++const WEEKLY_WINDOW_HOURS = 7 * 24;
++const DEFAULT_HOURS_PER_DAY = 12;
++const DEFAULT_DAYS_PER_WEEK = 6.5;
++const DEFAULT_ACTIVE_HOURS_PER_WEEK = DEFAULT_HOURS_PER_DAY * DEFAULT_DAYS_PER_WEEK;
+ 
+ export type FormatUsageStatusLineOptions = {
+   snapshot: UsageSnapshot | undefined;
+@@ -81,6 +86,7 @@ function formatUsageWidgets(options: FormatUsageStatusLineOptions): FormattedWid
+     formatWindowWidget(snapshot.sevenDayLeftPercent, config.widgets.sevenDay, options),
+     formatResetWidget(snapshot.fiveHourResetInSeconds, config.widgets.fiveHourReset, options),
+     formatResetWidget(snapshot.sevenDayResetInSeconds, config.widgets.sevenDayReset, options),
++    formatWeeklyMarginWidget(snapshot, options),
+   ].filter((widget): widget is FormattedWidget => widget !== undefined);
+ }
+ 
+@@ -279,6 +285,86 @@ function usesLayeredBarGradient(
+   );
+ }
+ 
++type WeeklyUsageWindow = {
++  remainingPercent: number;
++  resetInSeconds: number;
++};
++
++function formatWeeklyMarginWidget(
++  snapshot: UsageSnapshot,
++  options: FormatUsageStatusLineOptions,
++): FormattedWidget | undefined {
++  const weeklyWindow = findWeeklyUsageWindow(snapshot);
++  if (weeklyWindow === undefined) return undefined;
++
++  const marginHours = calculateWeeklyMarginHours(
++    weeklyWindow.remainingPercent,
++    weeklyWindow.resetInSeconds,
++  );
++  const value = marginHours === null ? "--" : formatSignedHours(marginHours);
++  return {
++    text: formatNeutralText(`margen ${value}`, options.theme),
++    hasAvailableValue: marginHours !== null,
++  };
++}
++
++function findWeeklyUsageWindow(snapshot: UsageSnapshot): WeeklyUsageWindow | undefined {
++  const candidates = [
++    {
++      remainingPercent: snapshot.fiveHourLeftPercent,
++      resetInSeconds: snapshot.fiveHourResetInSeconds,
++      windowInSeconds: snapshot.fiveHourWindowInSeconds,
++    },
++    {
++      remainingPercent: snapshot.sevenDayLeftPercent,
++      resetInSeconds: snapshot.sevenDayResetInSeconds,
++      windowInSeconds: snapshot.sevenDayWindowInSeconds,
++    },
++  ];
++
++  const weekly = candidates.find(
++    (candidate) =>
++      candidate.windowInSeconds === WEEKLY_WINDOW_SECONDS &&
++      isFiniteNumber(candidate.remainingPercent) &&
++      isFiniteNumber(candidate.resetInSeconds),
++  );
++  if (
++    weekly === undefined ||
++    !isFiniteNumber(weekly.remainingPercent) ||
++    !isFiniteNumber(weekly.resetInSeconds)
++  ) {
++    return undefined;
++  }
++
++  return {
++    remainingPercent: weekly.remainingPercent,
++    resetInSeconds: weekly.resetInSeconds,
++  };
++}
++
++export function calculateWeeklyMarginHours(
++  remainingPercent: number,
++  resetInSeconds: number,
++): number | null {
++  const consumedPercent = 100 - clamp(remainingPercent, 0, 100);
++  const calendarHoursRemaining = clamp(resetInSeconds / 3_600, 0, WEEKLY_WINDOW_HOURS);
++  const calendarHoursElapsed = WEEKLY_WINDOW_HOURS - calendarHoursRemaining;
++  const elapsedScheduledHours =
++    DEFAULT_ACTIVE_HOURS_PER_WEEK * calendarHoursElapsed / WEEKLY_WINDOW_HOURS;
++  if (consumedPercent <= 0 || elapsedScheduledHours <= 0) return null;
++
++  const observedBurnPercentPerActiveHour = consumedPercent / elapsedScheduledHours;
++  const supportedRemainingHours = remainingPercent / observedBurnPercentPerActiveHour;
++  const plannedRemainingHours = DEFAULT_ACTIVE_HOURS_PER_WEEK - elapsedScheduledHours;
++  return supportedRemainingHours - plannedRemainingHours;
++}
++
++function formatSignedHours(hours: number): string {
++  const rounded = Math.round(hours);
++  const normalized = Object.is(rounded, -0) ? 0 : rounded;
++  return `${normalized >= 0 ? "+" : ""}${normalized}h`;
++}
++
+ function formatResetWidget(
+   seconds: number | null,
+   config: ResetWidgetConfig,
+diff --git a/src/usage-snapshot.ts b/src/usage-snapshot.ts
+index 880c159..71e4f84 100644
+--- a/src/usage-snapshot.ts
++++ b/src/usage-snapshot.ts
+@@ -1,5 +1,6 @@
+ export type UsageWindow = {
+   used_percent?: unknown;
++  limit_window_seconds?: unknown;
+   reset_after_seconds?: unknown;
+   reset_at?: unknown;
+ };
+@@ -21,6 +22,8 @@ export type UsageSnapshot = {
+   sevenDayLeftPercent: number | null;
+   fiveHourResetInSeconds: number | null;
+   sevenDayResetInSeconds: number | null;
++  fiveHourWindowInSeconds: number | null;
++  sevenDayWindowInSeconds: number | null;
+   isLimited: boolean;
+ };
+ 
+@@ -52,6 +55,8 @@ export function parseUsageSnapshot(
+     sevenDayLeftPercent: usedToRemainingPercent(secondaryWindow?.used_percent),
+     fiveHourResetInSeconds: resetInSeconds(primaryWindow, options.nowMs),
+     sevenDayResetInSeconds: resetInSeconds(secondaryWindow, options.nowMs),
++    fiveHourWindowInSeconds: windowDurationInSeconds(primaryWindow),
++    sevenDayWindowInSeconds: windowDurationInSeconds(secondaryWindow),
+     isLimited: bucket?.allowed === false || bucket?.limit_reached === true,
+   };
+ }
+@@ -126,6 +131,11 @@ function resetInSeconds(
+   return Math.max(0, resetAtSeconds - nowMs / 1000);
+ }
+ 
++function windowDurationInSeconds(window: Record<string, unknown> | undefined): number | null {
++  const duration = window?.limit_window_seconds;
++  return isFiniteNumber(duration) ? Math.max(0, duration) : null;
++}
++
+ function isFiniteNumber(value: unknown): value is number {
+   return typeof value === "number" && Number.isFinite(value);
+ }

@@ -5,121 +5,69 @@ kind: how-to
 triggers:
   - pi os
   - pi agentic os
-  - /aos-continuar
-  - /aos-sync
-  - /aos-skills
-  - /aos-plan-implementar
-  - /aos-orquestar
-  - /aos-fanout
+  - /flow
+  - pensar
+  - planear
+  - hacer
+  - cerrar
   - ask_user
-  - taskflow
   - advisor
   - pi-lens
   - computer use
 primary_refs:
-  - .pi/extensions/aos-tools.ts
-  - .pi/extensions/aos-checkpoint-nudge.ts
-  - .pi/prompts/
+  - aos.requirements.json
+  - C:/dev/os/runtime/aos-flujo.ts
+  - C:/dev/os/docs/topics/pi-agentic-os.md
   - docs/topics/pi-extension-stack.md
   - docs/topics/agent-tool-routing.md
   - docs/reference/tool-routing.yaml
-  - docs/reference/pi-agentic-os-command-surface.md
-  - docs/OS_PLAYBOOK.md
-  - scripts/toggle-skills-link.ps1
-  - C:/dev/os/docs/skills/aos-guardar-sesion/SKILL.md
 ---
 
 # Pi Agentic OS
 
-Adapter Pi para Agentic OS. La fuente de verdad sigue siendo el repo
-(`AGENTS.md`, `WORKING_MEMORY`, topics, tracks, specs y decisiones); Pi aporta
-slash commands, prompts, tools y compaction controlada.
+`C:/dev/pi` consume el `/flow` global canónico de `C:/dev/os`; no publica
+runtime, prompts de lifecycle ni comandos AOS locales. Este repo conserva sólo
+customizaciones Pi portables de JP.
 
-Detalle historico/completo de comandos y paquetes:
-`docs/reference/pi-agentic-os-command-surface.md` y
-`docs/topics/pi-extension-stack.md`.
+## Superficie Canónica
 
-## Comandos Pi Locales
+| Entrada | Uso |
+| --- | --- |
+| `/flow → Pensar` | Explorar y converger decisiones en el hilo actual. |
+| `/flow → Planear` | Crear un brief durable y registrar un único foco. |
+| `/flow → Hacer` | Abrir una sesión nueva enlazada, precargar el handoff documental y ejecutar directamente allí. |
+| `/flow → Cerrar` | Compactar valor durable todavía faltante; es opcional si Hacer ya persistió el estado. |
+| `/new` | Abrir manualmente una sesión limpia fuera del handoff de Hacer. |
 
-Regla de visibilidad: con `enableSkillCommands=false`, `docs/skills/*` no aparece
-como slash command. Los slash visibles de AOS deben existir como
-`.pi/prompts/aos-*.md` o registrarse en `.pi/extensions/aos-tools.ts`.
+`/flow` precarga texto revisable y nunca autoenvía. Planear declara en el brief
+`execution_route: economical | balanced | strong`: `economical` usa Luna High
+para docs o mecánica de bajo riesgo, `balanced` usa Sol Medium por defecto y
+`strong` usa Sol High para trabajo sensible. Hacer exige foco `ready`: 0 deriva
+a Planear, 1 autoselecciona y N abre picker. La sesión nueva aplica la ruta antes
+de precargar índice, Working Memory y brief; modelo o auth ausentes bloquean sin
+fallback. No promete transportar conversación transitoria y ejecuta en ese hilo
+principal, sin Agent ni otra sesión.
 
-| Comando | Tipo | Uso |
-| --- | --- | --- |
-| `/aos-help` | prompt | Mostrar comandos AOS. |
-| `/aos-guardar-sesion` | prompt | Persistir valor durable sin abrir sesion nueva. |
-| `/aos-checkpoint`, `/aos-cerrar` | prompt legacy | Alias de guardado/cierre. |
-| `/aos-continuar [objetivo]` | extension | Abrir sesion nueva con prompt desde docs vivos. |
-| `/aos-plan-implementar` | extension | Crear/revisar plan y elegir un motor principal. |
-| `/aos-routing status | set | clear` | extension | Registro advisory del motor principal activo. |
-| `/aos-status [audit]` | extension | Estado git/contexto/audit/routing. |
-| `/aos-sync` | extension | Ensure skills link, regenerar indice y correr audit. |
-| `/aos-skills status | on | off | toggle` | extension | Ver/reparar `.agents/skills`; `off`/`toggle` son aliases legacy no destructivos. |
-| `/aos-compact [foco]` | extension | Compactacion manual OS-aware. |
-| `/aos-orquestar`, `/aos-fanout` | prompt | Fan-out controlado con taskflow/subagentes. |
-| `/aos-evaluar-skills` | prompt | Auditar skills/prompts/extensiones. |
-| `/ask`, `/advisor`, `/until-done`, `/planner-*` | paquetes Pi | Disponibles segun stack global. |
+## Contrato Global
 
-## Extensiones Locales
+- `aos.requirements.json` exige `aos.flow-first@1.1.0`, scope `user` y
+  cardinalidad 1.
+- El runtime efectivo debe ser `C:/dev/os/runtime/aos-flujo.ts`, origin
+  `package`, sin `.pi/extensions/aos-flujo.ts` local.
+- `scripts/agent-context-audit.ts` valida package, requisitos y ausencia de copia.
+- Init/adopt/update/align/perfect/realinear son operaciones manager-only de
+  `C:/dev/os`, no slash commands diarios de este workspace.
 
-- `.pi/extensions/aos-tools.ts`: `/aos-status`, `/aos-routing`, `/aos-sync`,
-  `/aos-skills`, `/aos-compact`, `/aos-continuar`, `/aos-plan-implementar`.
-- `.pi/extensions/aos-checkpoint-nudge.ts`: nudges para guardar contexto cuando
-  uso de ventana/diff/tiempo lo justifica.
+## Customizaciones Locales
 
-## Strategy Gate
+Windows Input, footer/statusline y UX compacta se mantienen en `pi-extensions/`
+y sus scripts. No confundir esas fuentes portables con gobierno AOS o inventario
+global. Aplicar configuraciones globales requiere autorización, backup y smoke.
 
-Usar `/aos-plan-implementar` para trabajos medianos/grandes. Elegir **un** motor:
-manual, planner, dgoal, until-done, long-task o taskflow. No anidar motores sin
-explicitar por que.
+## Flujo
 
-La fuente canonica de combinacion es `docs/topics/agent-tool-routing.md`; la
-policy verificable vive en `docs/reference/tool-routing.yaml`.
-
-Antes de implementar, emitir un bloque `Routing Decision` con intent, motor
-principal, motivo, apoyos, nesting prohibido, gates y verificacion.
-
-Heuristica corta:
-
-- cambio chico: manual + Ponytail si aplica + checks;
-- investigacion externa/versionada: `web_search`/`fetch_content`/`web_answer`,
-  `librarian` para internals OSS;
-- decision fuerte: `advisor()` antes de `DECISIONS.md`, arquitectura/storage/prod
-  o loops largos; no para orientación barata, checks o pasos chicos de un
-  playbook ya decidido;
-- fleet update AOS serial: `/aos-fleet-update` -> `pi_long_task`; no `dgoal`;
-- auditoria/review/fan-out: `taskflow` o council si el paralelismo vale el costo;
-- codigo tocado: `lens_diagnostics`/LSP como feedback y checks del repo como gate.
-
-## Human-in-the-loop
-
-Usar `ask_user`/`ask_user_question` cuando hay decision de producto, arquitectura,
-credenciales, permisos, instalaciones, prod/deploy, acciones destructivas o
-contradiccion internet-vs-local. No preguntar lo inferible ni encadenar modales.
-
-## Browser / Computer Use
-
-Browser signed-in, Cua Driver, hotkeys, clipboard, apps o UI visible requieren el
-aviso inicial de `AGENTS.md` para un batch coherente. No tocar cuentas reales,
-canales, pagos, prod ni datos privados sin confirmacion explicita.
-
-## Orquestacion
-
-Usar taskflow/council cuando haya paralelismo real, ownership claro y retorno
-comprimido. El orquestador integra y verifica; workers empiezan read-only salvo
-plan aprobado.
-
-## Flujo Recomendado
-
-1. Leer ruta liviana: index -> working memory -> TOPICS -> topic puntual.
-2. Inspeccionar git antes de editar.
-3. Elegir herramienta con la tabla de `docs/topics/pi-extension-stack.md`.
-4. Ejecutar el corte mas chico verificable.
-5. Si se tocaron docs: `bun run context:index` y `bun run check`.
-6. Guardar valor durable en docs; no transcript.
-
-## Portabilidad
-
-`.pi/` es adapter opcional. Repos destino reciben solo lo que necesitan; no copiar
-settings globales, inventarios de JP ni registry manager-only.
+Índice → Working Memory → contexto puntual → `/flow → Hacer` → sesión enlazada →
+un batch → checks/diff → persistencia final. Usar `/flow → Cerrar` sólo si quedó
+continuidad durable pendiente. Browser, hotkeys, clipboard o UI visible requieren
+el aviso inicial; installs, credenciales, commit, push, deploy, producción y
+destrucción mantienen gates separados.

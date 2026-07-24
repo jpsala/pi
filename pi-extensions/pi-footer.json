@@ -14,16 +14,14 @@
   "extensionStatusRow": {
     "hiddenKeys": [
       "chrome",
-      "codex-usage",
-      "codex-usage.compact",
+      "openai-usage",
       "link",
       "telegram",
       "windows-input"
     ],
     "knownKeys": [
       "chrome",
-      "codex-usage",
-      "codex-usage.compact",
+      "openai-usage",
       "link",
       "telegram",
       "windows-input"
@@ -60,28 +58,6 @@
           "icon": "dir:",
           "hideWhenEmpty": true,
           "fg": "pi:muted"
-        }
-      },
-      {
-        "id": "jp-branch",
-        "type": "git-branch",
-        "enabled": true,
-        "options": {
-          "icon": "git:",
-          "hideWhenEmpty": true,
-          "fg": "pi:success",
-          "gitBranchDisplayStyle": "default"
-        }
-      },
-      {
-        "id": "jp-diff",
-        "type": "git-diff",
-        "enabled": true,
-        "options": {
-          "raw": true,
-          "gitDiffMode": "compact",
-          "hideWhenEmpty": true,
-          "fg": "pi:warning"
         }
       },
       {
@@ -163,11 +139,11 @@
         }
       },
       {
-        "id": "jp-codex-usage",
+        "id": "jp-openai-usage",
         "type": "external-status",
         "enabled": true,
         "options": {
-          "externalStatusKey": "codex-usage.compact",
+          "externalStatusKey": "openai-usage",
           "trimValue": 0,
           "preserveTrimStyles": false,
           "hideWhenEmpty": true,

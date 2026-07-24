@@ -1,6 +1,7 @@
 param(
   [switch]$Status,
   [switch]$NoFooterConfig,
+  [switch]$NoUsageConfig,
   [switch]$NoPackagePatches
 )
 
@@ -10,24 +11,127 @@ $RepoRoot = Split-Path -Parent $PSScriptRoot
 $AgentDir = if ($env:PI_CODING_AGENT_DIR) { $env:PI_CODING_AGENT_DIR } else { Join-Path $env:USERPROFILE ".pi\agent" }
 $FooterSource = Join-Path $RepoRoot "pi-extensions\pi-footer.json"
 $FooterTarget = Join-Path $AgentDir "extensions\pi-footer.json"
+$UsageSource = Join-Path $RepoRoot "pi-extensions\pi-openai-usage.json"
+$UsageTarget = Join-Path $AgentDir "extensions\pi-openai-usage.json"
+$UsagePackageRoot = Join-Path $AgentDir "npm\node_modules\pi-openai-usage"
+$UsagePackageJson = Join-Path $UsagePackageRoot "package.json"
+$UsageSnapshotTarget = Join-Path $UsagePackageRoot "src\usage-snapshot.ts"
+$UsageFormatTarget = Join-Path $UsagePackageRoot "src\format.ts"
+$UsageMarginPatch = Join-Path $RepoRoot "pi-extensions\patches\pi-openai-usage-0.1.3-weekly-margin.patch"
 $FooterPackageTarget = Join-Path $AgentDir "npm\node_modules\pi-footer\src\index.ts"
 $ChromeTarget = Join-Path $AgentDir "npm\node_modules\pi-chrome\extensions\chrome-profile-bridge\index.ts"
-$UsageTarget = Join-Path $AgentDir "npm\node_modules\@calesennett\pi-codex-usage\src\codex-usage\format.ts"
-$UsageExtensionTarget = Join-Path $AgentDir "npm\node_modules\@calesennett\pi-codex-usage\extensions\codex-usage-status.ts"
+
+function Get-UsageStatusKey([string]$Path) {
+  if (!(Test-Path $Path)) { return $null }
+  $config = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+  foreach ($line in $config.lines) {
+    foreach ($widget in $line) {
+      if ($widget.id -eq "jp-openai-usage") {
+        return [string]$widget.options.externalStatusKey
+      }
+    }
+  }
+  return $null
+}
+
+function Invoke-UsageMarginGitApply([switch]$Reverse, [switch]$Check) {
+  $arguments = @("apply")
+  if ($Reverse) { $arguments += "--reverse" }
+  if ($Check) { $arguments += "--check" }
+  $arguments += $UsageMarginPatch
+
+  $previousErrorActionPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = "Continue"
+    & git @arguments 2>&1 | Out-Null
+    return $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+  }
+}
+
+function Test-UsageMarginPatch {
+  if (!(Test-Path $UsagePackageRoot) -or !(Test-Path $UsageMarginPatch)) { return $false }
+  Push-Location $UsagePackageRoot
+  try {
+    return (Invoke-UsageMarginGitApply -Reverse -Check) -eq 0
+  } finally {
+    Pop-Location
+  }
+}
 
 function Show-Status {
+  $ok = $true
   Write-Host "Repo:         $RepoRoot"
   Write-Host "Pi agent dir: $AgentDir"
   Write-Host "Footer src:   $FooterSource"
   Write-Host "Footer dst:   $FooterTarget"
+  Write-Host "Usage src:    $UsageSource"
+  Write-Host "Usage dst:    $UsageTarget"
+  Write-Host "Usage pkg:    $UsagePackageRoot"
+  Write-Host "Margin patch: $UsageMarginPatch"
   Write-Host "pi-footer:    $FooterPackageTarget"
   Write-Host "pi-chrome:    $ChromeTarget"
-  Write-Host "codex-usage:  $UsageTarget"
-  Write-Host "codex-ext:    $UsageExtensionTarget"
   Write-Host ""
-  foreach ($path in @($FooterSource, $FooterTarget, $FooterPackageTarget, $ChromeTarget, $UsageTarget, $UsageExtensionTarget)) {
-    if (Test-Path $path) { Write-Host "ok      $path" } else { Write-Host "missing $path" }
+  foreach ($path in @($FooterSource, $FooterTarget, $UsageSource, $UsageTarget, $UsagePackageJson, $UsageSnapshotTarget, $UsageFormatTarget, $UsageMarginPatch, $FooterPackageTarget, $ChromeTarget)) {
+    if (Test-Path $path) {
+      Write-Host "ok      $path"
+    } else {
+      Write-Host "missing $path"
+      $ok = $false
+    }
   }
+
+  $sourceKey = Get-UsageStatusKey $FooterSource
+  $targetKey = Get-UsageStatusKey $FooterTarget
+  if ($sourceKey -eq "openai-usage") {
+    Write-Host "ok      canonical usage key: openai-usage"
+  } else {
+    Write-Host "drift   canonical usage key: $sourceKey"
+    $ok = $false
+  }
+  if ($targetKey -eq $sourceKey -and $targetKey) {
+    Write-Host "ok      installed usage key: $targetKey"
+  } else {
+    Write-Host "drift   installed usage key: $targetKey (expected $sourceKey)"
+    $ok = $false
+  }
+  if (Test-Path $UsagePackageJson) {
+    $usagePackageVersion = (Get-Content -LiteralPath $UsagePackageJson -Raw | ConvertFrom-Json).version
+    if ($usagePackageVersion -eq "0.1.3") {
+      Write-Host "ok      pi-openai-usage version: $usagePackageVersion"
+    } else {
+      Write-Host "drift   pi-openai-usage version: $usagePackageVersion (expected 0.1.3)"
+      $ok = $false
+    }
+  }
+  if (Test-UsageMarginPatch) {
+    Write-Host "ok      weekly margin patch is applied"
+  } else {
+    Write-Host "drift   weekly margin patch is missing"
+    $ok = $false
+  }
+  if ((Test-Path $FooterSource) -and (Test-Path $FooterTarget)) {
+    $sourceContent = Get-Content -LiteralPath $FooterSource -Raw
+    $targetContent = Get-Content -LiteralPath $FooterTarget -Raw
+    if ($sourceContent -ceq $targetContent) {
+      Write-Host "ok      footer config is synchronized"
+    } else {
+      Write-Host "drift   footer config differs from canonical source"
+      $ok = $false
+    }
+  }
+  if ((Test-Path $UsageSource) -and (Test-Path $UsageTarget)) {
+    $sourceContent = Get-Content -LiteralPath $UsageSource -Raw
+    $targetContent = Get-Content -LiteralPath $UsageTarget -Raw
+    if ($sourceContent -ceq $targetContent) {
+      Write-Host "ok      OpenAI usage config is synchronized"
+    } else {
+      Write-Host "drift   OpenAI usage config differs from canonical source"
+      $ok = $false
+    }
+  }
+  return $ok
 }
 
 function Backup-File([string]$Path) {
@@ -61,6 +165,40 @@ function Install-FooterConfig {
   if (Test-Path $FooterTarget) { Backup-File $FooterTarget }
   Copy-Item $FooterSource $FooterTarget -Force
   Write-Host "copied  pi-footer config"
+}
+
+function Install-UsageConfig {
+  if (!(Test-Path $UsageSource)) { throw "Missing source usage config: $UsageSource" }
+  New-Item -ItemType Directory -Force (Split-Path -Parent $UsageTarget) | Out-Null
+  if (Test-Path $UsageTarget) { Backup-File $UsageTarget }
+  Copy-Item $UsageSource $UsageTarget -Force
+  Write-Host "copied  pi-openai-usage config"
+}
+
+function Patch-OpenAIUsageMargin {
+  if (!(Test-Path $UsagePackageJson)) { throw "Missing pi-openai-usage package: $UsagePackageRoot" }
+  if (!(Test-Path $UsageMarginPatch)) { throw "Missing usage margin patch: $UsageMarginPatch" }
+  $usagePackageVersion = (Get-Content -LiteralPath $UsagePackageJson -Raw | ConvertFrom-Json).version
+  if ($usagePackageVersion -ne "0.1.3") {
+    throw "Unsupported pi-openai-usage version: $usagePackageVersion (expected 0.1.3)"
+  }
+  if (Test-UsageMarginPatch) {
+    Write-Host "ok      weekly margin patch already applied"
+    return
+  }
+
+  Push-Location $UsagePackageRoot
+  try {
+    if ((Invoke-UsageMarginGitApply -Check) -ne 0) {
+      throw "Usage margin patch does not apply cleanly"
+    }
+    Backup-File $UsageSnapshotTarget
+    Backup-File $UsageFormatTarget
+    if ((Invoke-UsageMarginGitApply) -ne 0) { throw "Usage margin patch failed" }
+  } finally {
+    Pop-Location
+  }
+  Write-Host "patched pi-openai-usage weekly margin"
 }
 
 function Patch-PiFooterPackage {
@@ -116,161 +254,17 @@ function Patch-PiChrome {
   Replace-Regex $ChromeTarget '(?s)\tconst updateChromeStatus = \(ctx: ExtensionContext\): void => \{.*?\r?\n\t\};' $statusReplacement "pi-chrome compact status"
 }
 
-function Patch-CodexUsageExtension {
-  $importReplacement = @'
-import { formatCompactStatus, formatStatus, unavailableStatus } from "../src/codex-usage/format";
-'@
-  $constReplacement = @'
-const EXTENSION_ID = "codex-usage";
-const COMPACT_EXTENSION_ID = `${EXTENSION_ID}.compact`;
-'@
-  $stopReplacement = @'
-	private stop(ctx: ExtensionContext): void {
-		if (this.timer) clearInterval(this.timer);
-		this.timer = undefined;
-		this.queued = undefined;
-		this.ctx = undefined;
-		this.generation++;
-		if (ctx.hasUI) {
-			ctx.ui.setStatus(EXTENSION_ID, undefined);
-			ctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
-		}
-	}
-
-	private enqueuePreferenceOperation
-'@
-  $refreshReplacement = @'
-	private async refresh(ctx = this.ctx, modelId = ctx?.model?.id, generation = this.generation): Promise<void> {
-		if (!ctx?.hasUI || !this.isCurrent(generation)) return;
-
-		if (this.inFlight) {
-			this.queued = { ctx, generation, modelId };
-			return;
-		}
-
-		this.inFlight = true;
-		try {
-			const usage = await getUsage(modelId);
-			if (!this.isCurrent(generation)) return;
-			this.lastUsage = usage;
-			ctx.ui.setStatus(EXTENSION_ID, "");
-			ctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, usage, this.preferences));
-		} catch (error) {
-			if (!this.isCurrent(generation)) return;
-			if (errorMessage(error).includes(MISSING_AUTH_ERROR)) {
-				this.lastUsage = undefined;
-				ctx.ui.setStatus(EXTENSION_ID, undefined);
-				ctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
-			} else {
-				ctx.ui.setStatus(EXTENSION_ID, unavailableStatus(ctx, modelId));
-				ctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
-			}
-		} finally {
-			this.inFlight = false;
-			const queued = this.queued;
-			this.queued = undefined;
-			if (queued && this.isCurrent(queued.generation)) void this.refresh(queued.ctx, queued.modelId, queued.generation);
-		}
-	}
-
-	private renderLast
-'@
-  $renderLastReplacement = @'
-	private renderLast(ctx: ExtensionContext): boolean {
-		if (!ctx.hasUI || !this.lastUsage) return false;
-		ctx.ui.setStatus(EXTENSION_ID, "");
-		ctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, this.lastUsage, this.preferences));
-		return true;
-	}
-
-	private savePreferences
-'@
-
-  Replace-Regex $UsageExtensionTarget 'import \{ (?:formatCompactStatus, )?formatStatus, unavailableStatus \} from "\.\./src/codex-usage/format";' $importReplacement "codex-usage import compact formatter"
-  Replace-Regex $UsageExtensionTarget 'const EXTENSION_ID = "codex-usage";\r?\n(?:const COMPACT_EXTENSION_ID = `\$\{EXTENSION_ID\}\.compact`;\r?\n?)?' ($constReplacement + "`n") "codex-usage compact status key"
-  Replace-Regex $UsageExtensionTarget '(?s)\tprivate stop\(ctx: ExtensionContext\): void \{.*?\r?\n\t\}\r?\n\r?\n\tprivate enqueuePreferenceOperation' $stopReplacement "codex-usage stop clears compact status"
-  Replace-Regex $UsageExtensionTarget '(?s)\tprivate async refresh\(ctx = this\.ctx, modelId = ctx\?\.model\?\.id, generation = this\.generation\): Promise<void> \{.*?\r?\n\t\}\r?\n\r?\n\tprivate renderLast' $refreshReplacement "codex-usage compact refresh method"
-  Replace-Regex $UsageExtensionTarget '(?s)\tprivate renderLast\(ctx: ExtensionContext\): boolean \{.*?\r?\n\t\}\r?\n\r?\n\tprivate savePreferences' $renderLastReplacement "codex-usage compact renderLast method"
-}
-
-function Patch-CodexUsage {
-  Patch-CodexUsageExtension
-
-  $percentReplacement = @'
-const ACTIVE_DAYS_PER_WEEK = 6;
-const WEEK_SECONDS = 7 * 24 * 60 * 60;
-const DAY_SECONDS = 24 * 60 * 60;
-
-function clamp(value: number, min: number, max: number): number {
-	return Math.min(max, Math.max(min, value));
-}
-
-function formatBudgetCushionDays(theme: Theme, usage: UsageSnapshot): string | null {
-	const left7d = usage.leftPercent["7d"];
-	const reset7d = usage.resetInSeconds["7d"];
-	if (left7d === null || reset7d === null || Number.isNaN(reset7d)) return null;
-
-	const used7d = 100 - left7d;
-	const elapsedSeconds = clamp(WEEK_SECONDS - reset7d, 0, WEEK_SECONDS);
-	const elapsedActiveDays = clamp(elapsedSeconds / DAY_SECONDS, 0, ACTIVE_DAYS_PER_WEEK);
-	const expectedUsed = clamp(elapsedActiveDays * (100 / ACTIVE_DAYS_PER_WEEK), 0, 100);
-	const dailyBudget = 100 / ACTIVE_DAYS_PER_WEEK;
-	const rounded = Math.round(((expectedUsed - used7d) / dailyBudget) * 10) / 10;
-	const cushionDays = Object.is(rounded, -0) ? 0 : rounded;
-	const color = usage.isLimited || cushionDays <= -0.9 ? "error" : cushionDays <= -0.3 ? "warning" : "success";
-	return theme.fg(color, `colchón:${cushionDays > 0 ? "+" : ""}${cushionDays.toFixed(1)}d`);
-}
-
-function formatPercent(theme: Theme, leftPercent: number | null, mode: PercentMode): string {
-	if (leftPercent === null) return theme.fg("muted", "--");
-
-	const color = leftPercent <= 10 ? "error" : leftPercent <= 25 ? "warning" : "success";
-	const displayed = mode === "left" ? leftPercent : 100 - leftPercent;
-	return theme.fg(color, `${Math.round(displayed)}% ${mode}`);
-}
-
-function formatCompactPercent(theme: Theme, leftPercent: number | null, mode: PercentMode): string {
-	if (leftPercent === null) return theme.fg("muted", "--");
-
-	const color = leftPercent <= 10 ? "error" : leftPercent <= 25 ? "warning" : "success";
-	const displayed = mode === "left" ? leftPercent : 100 - leftPercent;
-	return theme.fg(color, `${Math.round(displayed)}%`);
-}
-
-function formatCountdown
-'@
-
-  $compactReplacement = @'
-export function formatCompactStatus(ctx: ExtensionContext, usage: UsageSnapshot, preferences: Preferences): string {
-	const theme = ctx.ui.theme;
-	const separator = theme.fg("dim", " · ");
-	const usageText = windowNames
-		.map(name => `${theme.fg("dim", `${name}:`)}${formatCompactPercent(theme, usage.leftPercent[name], preferences.usageMode)}`)
-		.join(separator);
-	const cushion = formatBudgetCushionDays(theme, usage);
-	const cushionText = cushion ? `${separator}${cushion}` : "";
-	const reset = formatCountdown(usage.resetInSeconds[preferences.refreshWindow]);
-	const resetText = reset ? `${separator}${theme.fg("dim", `↺${preferences.refreshWindow}:${reset}`)}` : "";
-	return `${usageText}${cushionText}${resetText}`;
-}
-
-export function unavailableStatus
-'@
-
-  Replace-Regex $UsageTarget '(?s)(?:const ACTIVE_DAYS_PER_WEEK = 6;.*?\r?\n\r?\n)?function formatPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n(?:function formatCompactPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n)?function formatCountdown' $percentReplacement "codex-usage compact percent"
-  Replace-Regex $UsageTarget '(?s)(?:export function formatCompactStatus\(ctx: ExtensionContext, usage: UsageSnapshot, preferences: Preferences\): string \{.*?\r?\n\}\r?\n\r?\n)?export function unavailableStatus' $compactReplacement "codex-usage compact status"
-}
-
 if ($Status) {
-  Show-Status
-  exit 0
+  if (Show-Status) { exit 0 }
+  exit 1
 }
 
 if (!$NoFooterConfig) { Install-FooterConfig }
+if (!$NoUsageConfig) { Install-UsageConfig }
 if (!$NoPackagePatches) {
+  Patch-OpenAIUsageMargin
   Patch-PiFooterPackage
   Patch-PiChrome
-  Patch-CodexUsage
 }
 
 Write-Host ""

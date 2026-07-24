@@ -2,23 +2,26 @@
 
 Generated cache. Do not edit by hand.
 
-Generated: 2026-07-11T21:24:17.497Z
+Generated: 2026-07-24T01:47:45.141Z
 
 ## Topics
 
-- active: [agent-tool-routing](../topics/agent-tool-routing.md) - tool routing, routing decision, combinar tools, elegir herramienta, dgoal, until-done, taskflow, advisor
+- active: [agent-tool-routing](../topics/agent-tool-routing.md) - tool routing, routing decision, /flow, elegir herramienta, subagente
 - active: [agentic-os-operations](../topics/agentic-os-operations.md) - init os, adopt os, update os, realinear os, perfect os
 - active: [docs-knowledge-system](../topics/docs-knowledge-system.md) - documentacion, docs, topics, indice, working memory
-- reference: [local-codex-skills](../topics/local-codex-skills.md) - skills locales, local skills, slash commands, docs/skills, .agents/skills, toggle skills, skills on, skills off
+- reference: [local-codex-skills](../topics/local-codex-skills.md) - skills locales, local skills, docs/skills, .agents/skills, pasar a skills, promover a skill
 - active: [minimal-implementation](../topics/minimal-implementation.md) - ponytail, minimal implementation, implementacion minima, solucion minima, yagni, over-engineering, bloat, boilerplate
 - active: [os-quality](../topics/os-quality.md) - perfect os, dejar en condiciones, calidad agentica, docs livianos, optimizar contexto
-- active: [pi-agentic-os](../topics/pi-agentic-os.md) - pi os, pi agentic os, /aos-continuar, /aos-sync, /aos-skills, /aos-plan-implementar, /aos-orquestar, /aos-fanout
+- active: [pi-agentic-os](../topics/pi-agentic-os.md) - pi os, pi agentic os, /flow, pensar, planear, hacer, cerrar, ask_user
 - active: [pi-extension-stack](../topics/pi-extension-stack.md) - extensiones pi, paquetes pi, pi packages, sincronizar pi, windows-input, pi footer, pi statusline, tool display
 - active: [pi-statusline-customization](../topics/pi-statusline-customization.md) - pi footer, pi statusline, chrome status, codex usage, otra pc, actualizar extensiones
+- active: [pi-tool-renderer](../topics/pi-tool-renderer.md) - renderer Pi, estilos tools, estilo Pi, pi-code-previews, pi-claude-code-ui, tool previews, Ctrl+O
 - active: [windows-input-extension](../topics/windows-input-extension.md) - windows-input, seleccion pi, shift arrow, ctrl shift arrow, custom editor, extension input
 
 ## Tracks
 
+- active: [Pi UI And Usage Evaluation](../tracks/pi-ui-usage-evaluation.md)
+- complete: [Pi Workspace Flow Alignment](../tracks/pi-workspace-flow-alignment.md)
 
 ## Specs
 
@@ -31,13 +34,12 @@ Generated: 2026-07-11T21:24:17.497Z
 ## Skills
 
 - Canon: [docs/skills/](../skills/)
-- Operational commands: aos-gol-lite
+- No local skill commands; AOS manager operations live in C:/dev/os.
 - Guidance: [local-codex-skills](../topics/local-codex-skills.md)
 
 ## Pi Resources
 
-- Prompts: aos-gol
-- Global extensions: codex-usage-report.ts, windows-input.ts
+- Global extensions: advisor-glm.ts, codex-quota.ts, windows-input.ts
 - Guidance: [pi-agentic-os](../topics/pi-agentic-os.md)
 
 ## Aliases
@@ -54,8 +56,7 @@ Generated: 2026-07-11T21:24:17.497Z
 | Adopt OS | Fusionar AOS en un repo con memoria/reglas previas. |
 | Update OS | Actualizar una instalacion AOS existente sin pisar contexto local. |
 | Perfect OS | Auditar y optimizar recuperabilidad, liviandad y continuidad. |
-| Sigamos | Continuar en la misma sesion. |
-| Gol Lite | Lote chico verificable sin `/until-done`. |
-| Guardar Sesion | Persistir valor durable en docs vivos. |
-| Nueva Sesion | Guardar y preparar handoff compacto para una sesion limpia. |
+| `/flow` | Entrada Pi global: Pensar, Planear con `execution_route`, Hacer o Cerrar. |
+| Handoff documental de Hacer | Sesión nueva enlazada que carga índice, Working Memory y brief para revisión antes de ejecutar directamente. |
+| Cerrar | Persistir valor durable todavía faltante; es opcional si Hacer ya cerró y `/new` queda para sesiones manuales. |
 | Windows Input | Extensión global `windows-input.ts` que reemplaza el prompt principal de Pi con selección/edición estilo Windows/VS Code. |

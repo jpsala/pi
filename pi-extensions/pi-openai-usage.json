@@ -1,0 +1,35 @@
+{
+  "enabled": true,
+  "refreshIntervalMs": 600000,
+  "display": {
+    "showAlways": false,
+    "showLabel": false,
+    "separator": " · "
+  },
+  "widgets": {
+    "fiveHour": {
+      "enabled": true,
+      "label": "7d",
+      "mode": "percent"
+    },
+    "sevenDay": {
+      "enabled": false,
+      "label": "7d",
+      "mode": "hidden"
+    },
+    "fiveHourReset": {
+      "enabled": true,
+      "label": "↺",
+      "mode": "countdown"
+    },
+    "sevenDayReset": {
+      "enabled": false,
+      "label": "↺",
+      "mode": "hidden"
+    }
+  },
+  "colors": {
+    "scheme": "none",
+    "target": "none"
+  }
+}

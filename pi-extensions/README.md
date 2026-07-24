@@ -30,12 +30,15 @@ El agente debe:
 
 Esta repo tambien guarda la configuracion compacta del footer/statusline de Pi:
 
-- Snapshot: `pi-extensions/pi-footer.json`
+- Snapshot footer: `pi-extensions/pi-footer.json`
+- Snapshot usage: `pi-extensions/pi-openai-usage.json`
+- Fuente `/codex-quota`: `pi-extensions/codex-quota.ts`
+- Patch de margen semanal: `pi-extensions/patches/pi-openai-usage-0.1.3-weekly-margin.patch`
 - Restaurador Windows: `scripts/apply-pi-statusline-customization.ps1`
 - Restaurador Linux/macOS/VPS: `scripts/apply-pi-statusline-customization.sh`
 - Guia: `docs/topics/pi-statusline-customization.md`
 
-El restaurador copia la config de `pi-footer` y reaplica parches locales en `pi-footer`, `pi-chrome` y `@calesennett/pi-codex-usage` para mantener `chrome:∞`, usage compacto y evitar el duplicado `Codex 5h NN% 7d NN%`.
+El restaurador copia las configs de `pi-footer` y `pi-openai-usage`, y reaplica parches locales en `pi-openai-usage`, `pi-footer` y `pi-chrome`. El patch de usage agrega `margen ±Nh` con la formula/defaults de `/codex-quota` sin duplicar polling. Requiere que `pi-openai-usage@0.1.3` ya este instalada; falla ante otra version y no instala paquetes.
 
 Para restaurarla o igualarla en otra PC Windows:
 
@@ -53,13 +56,25 @@ scripts/apply-pi-statusline-customization.sh
 
 Luego ejecutar `/reload` dentro de Pi.
 
+## Renderer de tools
+
+- Actual adoptado: `pi-code-previews@0.1.36`.
+- Parche activo: `pi-extensions/patches/pi-code-previews-0.1.36-tools-authoritative.patch`; hace que `Enabled tools` sea una allowlist explícita y persiste cada toggle inmediatamente, incluido el estado con todos en `off`.
+- Anterior: `pi-claude-code-ui@1.0.74`, instalada pero desactivada.
+- Guia canonica de estado, comandos, patch y rollback: `docs/topics/pi-tool-renderer.md`.
+
+No activar ambos renderers a la vez. El backup `code-previews-trial-20260722-100300` es referencia historica y no debe restaurarse completo porque antecede a otros cambios globales; para volver al renderer anterior se modifican sólo las dos entradas de paquetes y luego `/reload`.
+
 ## UX compacta de tools y WebUI
 
 Esta repo guarda tambien la configuracion de legibilidad para reducir ruido en Pi. Es configuracion local de JP, no dependencia AOS para repos destino:
 
 - `pi-extensions/pi-tool-display.json`: `read/search/MCP` ocultos por defecto y `bash` en resumen.
 - `pi-extensions/pi-hide-messages.json`: mantiene visibles los ultimos 12 mensajes.
-- `scripts/apply-pi-webui-ux.ps1` / `.sh`: copia esas configs y parchea `@firstpick/pi-package-webui` para ocultar tarjetas `EXTENSION OUTPUT` generadas por `ctx.ui.notify(...)`.
+- `pi-extensions/pi-keybindings.json`: shortcuts globales compartidos.
+- `pi-extensions/pi-sticky-input.json`: input/scroll compartido, con `mouseScroll: false`.
+- `pi-extensions/jp-tokyo-night-user-focus.json`: theme global compartido.
+- `scripts/apply-pi-webui-ux.ps1` / `.sh`: copia las configs de tool display/hide messages y parchea `@firstpick/pi-package-webui` cuando ese paquete existe.
 
 Windows:
 
@@ -74,6 +89,17 @@ scripts/apply-pi-webui-ux.sh
 ```
 
 Luego reiniciar WebUI o hacer hard refresh del navegador, y ejecutar `/reload` dentro de Pi para las configs TUI.
+
+Los otros snapshots portables se copian al perfil global respetando la plataforma:
+
+```text
+codex-quota.ts                     -> ~/.pi/agent/extensions/codex-quota.ts
+pi-keybindings.json                -> ~/.pi/agent/keybindings.json
+pi-sticky-input.json               -> ~/.pi/agent/extensions/pi-sticky-input/config.json
+jp-tokyo-night-user-focus.json     -> ~/.pi/agent/themes/jp-tokyo-night-user-focus.json
+```
+
+El acceso, Git, sincronizacion y gates de la notebook viven solamente en `C:/dev/infra/docs/runbooks/notebook-operations.md`; las operaciones del VPS viven en `C:/dev/infra/docs/runbooks/vps-operations.md`. La evidencia consolidada de paridad, comandos, hashes, backups y rollback vive en `C:/dev/infra/docs/tracks/pi-host-runtime-parity-20260723.md`.
 
 ## `windows-input.ts`
 

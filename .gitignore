@@ -25,3 +25,9 @@ coverage/
 # OS/editor noise
 .DS_Store
 Thumbs.db
+NUL
+nul
+
+# Local Pi/taskflow scratch artifacts
+.pi/taskflows/runs/
+tmp/

@@ -13,8 +13,7 @@
 | Adopt OS | Fusionar AOS en un repo con memoria/reglas previas. |
 | Update OS | Actualizar una instalacion AOS existente sin pisar contexto local. |
 | Perfect OS | Auditar y optimizar recuperabilidad, liviandad y continuidad. |
-| Sigamos | Continuar en la misma sesion. |
-| Gol Lite | Lote chico verificable sin `/until-done`. |
-| Guardar Sesion | Persistir valor durable en docs vivos. |
-| Nueva Sesion | Guardar y preparar handoff compacto para una sesion limpia. |
+| `/flow` | Entrada Pi global: Pensar, Planear con `execution_route`, Hacer o Cerrar. |
+| Handoff documental de Hacer | Sesión nueva enlazada que carga índice, Working Memory y brief para revisión antes de ejecutar directamente. |
+| Cerrar | Persistir valor durable todavía faltante; es opcional si Hacer ya cerró y `/new` queda para sesiones manuales. |
 | Windows Input | Extensión global `windows-input.ts` que reemplaza el prompt principal de Pi con selección/edición estilo Windows/VS Code. |

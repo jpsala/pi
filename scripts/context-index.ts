@@ -1,3 +1,5 @@
+/// <reference path="../types/aos-runtime.d.ts" />
+
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -18,17 +20,23 @@ function frontmatter(content: string) {
 }
 
 function scalar(frontmatterText: string, key: string) {
-  const match = frontmatterText.match(new RegExp(`^${key}:[ \\t]*([^\\r\\n]*)`, "m"));
-  return match?.[1]?.trim() ?? "";
+  const line = frontmatterText
+    .split(/\r?\n/)
+    .find((candidate) => candidate.startsWith(`${key}:`));
+  return line?.slice(key.length + 1).trim() ?? "";
 }
 
 function list(frontmatterText: string, key: string) {
-  const match = frontmatterText.match(new RegExp(`^${key}:\\s*\\r?\\n((?:\\s+- .+\\r?\\n?)+)`, "m"));
-  if (!match) return [];
-  return match[1]
-    .split(/\r?\n/)
-    .map((line) => line.trim().replace(/^- /, "").trim())
-    .filter(Boolean);
+  const lines = frontmatterText.split(/\r?\n/);
+  const start = lines.findIndex((line) => line === `${key}:`);
+  if (start < 0) return [];
+  const values: string[] = [];
+  for (const line of lines.slice(start + 1)) {
+    const match = line.match(/^\s+-\s+(.+)$/);
+    if (!match) break;
+    values.push(match[1].trim());
+  }
+  return values;
 }
 
 function markdownFiles(dir: string) {
@@ -123,7 +131,7 @@ const skillDirs = exists("docs/skills")
     .map((entry) => entry.name)
     .sort()
   : [];
-if (skillDirs.length) {
+if (exists("docs/skills")) {
   const nonCommandSkills = new Set(["impeccable", "aos-impeccable"]);
   const legacyAliasSkills = new Set([
     "checkpoint",
@@ -156,6 +164,7 @@ if (skillDirs.length) {
     .filter((skill) => exists(`docs/skills/${skill}/SKILL.md`));
   lines.push("- Canon: [docs/skills/](../skills/)");
   if (operationalSkills.length) lines.push(`- Operational commands: ${operationalSkills.join(", ")}`);
+  else lines.push("- No local skill commands; AOS manager operations live in C:/dev/os.");
   lines.push("- Guidance: [local-codex-skills](../topics/local-codex-skills.md)");
 } else {
   lines.push("- Missing docs/skills/");
@@ -202,5 +211,5 @@ while (lines.at(-1) === "") lines.pop();
 
 const output = "docs/.generated/context-index.md";
 mkdirSync(dirname(join(root, output)), { recursive: true });
-writeFileSync(join(root, output), `${lines.join("\n")}\n`);
+writeFileSync(join(root, output), `${lines.join("\n")}\n`, "utf8");
 console.log(`Wrote ${output}`);

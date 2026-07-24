@@ -32,3 +32,16 @@ Motivo: los comandos previos (`/aos-nueva-sesion`, `/aos-continuar-sesion`, `/ao
 
 Proximo paso: usar `/aos-continuar` despues de `/aos-guardar-sesion` y ejecutar `/reload` tras actualizar el adapter Pi.
 
+### 2026-07-22 - Usar C:/dev/pi como laboratorio reversible de personalizacion Pi
+
+Estado: accepted
+
+Decision: `C:/dev/pi` es la memoria durable y el laboratorio operativo de las customizaciones Pi de JP. Debe conservar fuentes propias, patches, configs saneadas, scripts, toggles, paquetes/versiones evaluados, estado activo/desactivado/retirado, comportamiento relevante de APIs, backups, smokes y rollback suficientes para reproducir un experimento, cambiar de alternativa o volver atras.
+
+Motivo: JP quiere iterar sobre extensiones, hacks, UI y APIs sin depender del historial del chat ni perder la capacidad de retomar o revertir pruebas anteriores.
+
+Consecuencias:
+
+- Cada experimento local relevante registra paquete/version, estado, archivos afectados, comandos, backup, validacion, riesgos y rollback.
+- `C:/dev/os` sigue siendo la fuente del runtime `/flow`, routing e inventario global general; este repo registra sólo las piezas Pi probadas o personalizadas aquí.
+- No se persisten `node_modules`, credenciales, `auth.json`, tokens ni respuestas privadas de APIs; sólo código propio, patches, configs saneadas y evidencia resumida.

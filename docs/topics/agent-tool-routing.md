@@ -1,137 +1,55 @@
 ---
 id: agent-tool-routing
 status: active
-kind: how-to
+kind: policy
 triggers:
   - tool routing
   - routing decision
-  - combinar tools
+  - /flow
   - elegir herramienta
-  - dgoal
-  - until-done
-  - taskflow
-  - advisor
-  - ask_user
+  - subagente
 primary_refs:
   - docs/reference/tool-routing.yaml
   - docs/topics/pi-agentic-os.md
-  - docs/topics/pi-extension-stack.md
-  - C:/dev/os/docs/skills/aos-plan-implementar/SKILL.md
-  - .pi/extensions/aos-tools.ts
+  - C:/dev/os/docs/topics/agent-tool-routing.md
+  - aos.requirements.json
 ---
 
 # Agent Tool Routing
 
-Contrato operativo para que AOS elija y combine herramientas Pi sin pisarse. La
-regla base: **un motor gobierna; las demas herramientas apoyan**.
+Este workspace sigue la política global **flow-first**: una entrada, un batch y
+el menor mecanismo suficiente.
 
-## Routing Decision
-
-Antes de un trabajo mediano/grande, declarar:
-
-```text
-Routing Decision
-- Intent: discuss | study | spec | plan | implement | review
-- Primary engine: manual | planner | dgoal | until-done | long-task | taskflow | pi-dynamic-workflows (solo piloto opt-in)
-- Why: scenario de docs/reference/tool-routing.yaml que matchea
-- Support tools: advisor | ask_user | lens | web | librarian | council | taskflow
-- Forbidden nesting: combinaciones que no se van a iniciar
-- Required gates: ask_user/advisor/lens/checks
-- Verification: comando/check/evidencia de cierre
-```
-
-Si el trabajo es chico y reversible, basta una linea: `Routing: manual, porque
-es cambio chico; validar con <check>`.
-
-## Matriz Corta
-
-| Escenario | Motor principal | Apoyos | Gate |
-| --- | --- | --- | --- |
-| Cambio chico/reversible | manual | Ponytail si aplica, lens, checks | ninguno |
-| Feature grande con stages/TDD | planner | advisor, lens, checks | advisor si cambia arquitectura |
-| Objetivo largo por fases | dgoal | taskflow read-only, advisor, lens | dgoal_check por fase |
-| Loop con verify command claro | until-done | advisor, lens, checks | verify command |
-| TODO secuencial claro | long-task | checks | ask_user si costo/side effects |
-| Fleet update AOS serial | long-task via `/aos-fleet-update` | checks, git, registry | commits solo si JP los pidio; no push |
-| Auditoria/fan-out/multi-repo | taskflow | advisor/council si aporta | workers read-only por defecto |
-| Fan-out pesado experimental/benchmark | pi-dynamic-workflows | taskflow baseline, advisor | opt-in explicito, trigger seguro, tabla comparativa |
-| Research externo/versionado | manual/research | web_search, fetch_content, web_answer, librarian | no secretos/datos privados |
-| Prod/deploy/envios/datos/destructivo | el que corresponda | ask_user | confirmacion explicita |
-
-La version verificable vive en `docs/reference/tool-routing.yaml`.
-
-## Routing GPT-5.6
-
-Elegir modelo y esfuerzo segun el tipo de trabajo, despues de aplicar los gates
-de seguridad y verificacion:
-
-| Trabajo | Ruta |
+| Intención | Ruta |
 | --- | --- |
-| Pi normal y planificacion compacta | Sol medium |
-| Planificacion, arquitectura, advisor y conformidad | Sol high |
-| Trabajo mecanico barato | Luna medium |
-| Implementacion acotada en background | Luna xhigh; reintentar con Luna max |
-| Implementacion interactiva sensible a latencia | Terra high |
-| Trabajo de alta garantia | Terra max, validado por Sol xhigh |
+| Entender o decidir | `/flow → Pensar` |
+| Crear brief durable | `/flow → Planear` |
+| Implementar | `/flow → Hacer`: sesión nueva enlazada, handoff documental y ejecución directa sin Agent |
+| Persistir lo todavía faltante | `/flow → Cerrar` |
 
-Tests, conformidad y riesgo prevalecen sobre heuristicas de costo. Cuando esta
-ruta implique cambiar settings, recargar Pi o abrir una sesion nueva segun
-corresponda para que el cambio tome efecto.
+Planear declara una ruta revisable en el brief: `economical` usa Luna High para
+docs o mecánica de bajo riesgo, `balanced` usa Sol Medium por defecto y `strong`
+usa Sol High para trabajo sensible. Hacer la aplica en la sesión nueva; modelo o
+auth ausentes bloquean sin fallback. No hay Terra, clasificador extra ni routing
+por turno.
 
-## Nesting Permitido
+Hacer lee sólo el foco estricto de `WORKING_MEMORY`: 0 deriva, 1 autoselecciona y
+N abre picker. Un foco o path inválido bloquea antes de abrir la sesión; el
+handoff queda revisable y nunca se autoenvía.
 
-- `long-task -> checks/git` para fleet updates AOS seriales; `/aos-fleet-update` arma el TODO y mantiene commits por repo aislados.
-- `dgoal -> taskflow` solo como auditoria/research/review acotada; dgoal sigue
-gobernando.
-- `dgoal/until-done/planner -> advisor|ask_user|lens|web` como apoyo.
-- `taskflow -> workers read-only`; el orquestador integra y escribe.
-- `pi-dynamic-workflows` solo via `aos-dynamic-workflows-pilot`/`pi-workflow`, preferentemente read-only, para comparar fan-out pesado contra `taskflow`; keyword trigger off por defecto y config JSON sin BOM.
-- `manual -> cualquier apoyo chico` si no crea estado persistente ni fan-out caro.
+## Apoyos
 
-## Nesting Prohibido
+- CodeMapper/FFF para orientación.
+- LSP/Lens para diagnóstico.
+- Advisor para riesgo o conflicto.
+- Web/librarian para conocimiento externo.
+- Ask User para decisiones humanas.
+- Chrome/CUA para UI explícita con aviso.
 
-- `dgoal` como default para fleet updates AOS mientras mantenga UX/i18n/gate fragil.
-- `dgoal -> until-done` o `until-done -> dgoal`.
-- `planner -> dgoal/until-done` salvo decision explicita de migrar de motor.
-- `taskflow detached -> taskflow detached`.
-- `pi-dynamic-workflows` como reemplazo default de `taskflow`, `/ultracode` permanente, trigger generico `workflow`, o settings con BOM/corruptos que hagan volver al default.
-- dos branches paralelas escribiendo los mismos archivos.
-- desktop/browser automation con cuentas/canales reales sin `ask_user`.
+No hay registro de engine ni runtime state local. Taskflow, Council, planner,
+until-done, dgoal, Ponytail, Governed Runner y worktree bridge están retirados;
+no recrearlos como fallback.
 
-## Active Engine Register
-
-`/aos-routing status|set <engine> [goal]|clear` mantiene un registro advisory en
-`.pi/state/aos-routing.json` (ignorado por git). Sirve para que `/aos-status`,
-`/aos-continuar` y `/aos-plan-implementar` avisen si el motor pedido entra en
-conflicto con el motor principal ya activo. No es un interceptor global de tool
-calls; enforcement duro requiere hooks del runtime Pi.
-
-Usarlo cuando arranca o termina un loop principal:
-
-```text
-/aos-routing set dgoal "alinear repos AOS"
-/aos-routing clear
-```
-
-## Gates
-
-- `ask_user`: prod, deploy, installs, commits/push, envios externos, datos
-privados, acciones destructivas, fan-out costoso o scope ambiguo.
-- `advisor`: arquitectura/storage/prod/security, decisiones `DECISIONS.md`-worthy
-o loops largos. No usarlo para confirmar obviedades, orientación barata,
-checks, ni pasos chicos de un playbook ya decidido; una vez por racimo de
-riesgo alcanza.
-- `lens`: despues de tocar codigo; si hay error real, resolver o documentar por
-que es ruido ambiental.
-- checks del repo: siempre mandan sobre heuristicas.
-
-## Si Hay Duda
-
-Elegir la opcion mas chica que no pierda seguridad:
-
-```text
-manual < long-task < until-done < planner < taskflow/council
-```
-
-Si dos motores parecen igual de buenos, usar `ask_user` o `advisor`, pero no
-activar dos motores principales a la vez.
+Preguntar antes de installs, credenciales, acciones destructivas o externas,
+commit, push, deploy o producción. La policy verificable está en
+`docs/reference/tool-routing.yaml`; la autoridad global vive en `C:/dev/os`.

@@ -76,6 +76,19 @@ Reemplaza el editor principal del prompt de Pi con un `CustomEditor` que agrega 
 - En Tabby requiere que Tabby no capture `Shift+Arrow` / `Ctrl+Shift+Arrow`; el workspace `C:\dev\tabby` ya documenta/libera esos hotkeys.
 - En Linux, `Ctrl+C` / `Ctrl+X` intentan copiar con helpers nativos y OSC 52 para sesiones remotas; `Ctrl+V` puede leer `wl-paste`, `xclip`/`xsel`, Termux o WSL/PowerShell cuando están disponibles. En SSH, pegar desde Windows normalmente depende de que el terminal envíe el paste a Pi.
 
+## Seleccion nativa y rueda en Windows Terminal
+
+La perdida de seleccion con mouse diagnosticada el 2026-07-21 no venia de `windows-input.ts`: `pi-sticky-input` tenia `mouseScroll: true` y habilitaba captura SGR (`1000/1006`), que bloquea la seleccion nativa del terminal.
+
+Estado validado:
+
+- `~/.pi/agent/extensions/pi-sticky-input/config.json`: `mouseScroll: false`.
+- Backup: `config.json.bak-mouse-scroll-20260721-193252`.
+- En `C:/dev/main`, `hotkeys-global.ahk` convierte `WheelUp/WheelDown` en `Ctrl+PageUp/PageDown` solo para Windows Terminal; `pi-sticky-input` usa esas teclas para desplazar historial sin capturar el mouse.
+- Probe y smoke fisico pasaron. Commit `C:/dev/main`: `b916350`.
+
+Si vuelve a fallar la seleccion, probar primero `/sticky-input mouse off`; no desactivar `windows-input` salvo que tambien falle la seleccion por teclado/render del editor.
+
 ## Instalar en otra PC
 
 Cuando JP pida instalar esta extensión en otra PC, el agente debe abrir este topic y `pi-extensions/README.md`, verificar estado, instalar una sola copia y recordar ejecutar `/reload` en Pi si la sesión estaba abierta.

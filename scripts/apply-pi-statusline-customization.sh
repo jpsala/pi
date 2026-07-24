@@ -3,6 +3,7 @@ set -euo pipefail
 
 show_status=0
 no_footer_config=0
+no_usage_config=0
 no_package_patches=0
 
 while [[ $# -gt 0 ]]; do
@@ -13,12 +14,15 @@ while [[ $# -gt 0 ]]; do
     --no-footer-config|-NoFooterConfig)
       no_footer_config=1
       ;;
+    --no-usage-config|-NoUsageConfig)
+      no_usage_config=1
+      ;;
     --no-package-patches|-NoPackagePatches)
       no_package_patches=1
       ;;
     -h|--help)
       cat <<'HELP'
-Usage: scripts/apply-pi-statusline-customization.sh [--status] [--no-footer-config] [--no-package-patches]
+Usage: scripts/apply-pi-statusline-customization.sh [--status] [--no-footer-config] [--no-usage-config] [--no-package-patches]
 
 Applies JP's compact Pi statusline configuration on Linux/macOS hosts.
 Uses PI_CODING_AGENT_DIR when set, otherwise ~/.pi/agent.
@@ -39,41 +43,138 @@ agent_dir="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
 
 footer_source="$repo_root/pi-extensions/pi-footer.json"
 footer_target="$agent_dir/extensions/pi-footer.json"
+usage_source="$repo_root/pi-extensions/pi-openai-usage.json"
+usage_target="$agent_dir/extensions/pi-openai-usage.json"
+usage_package_root="$agent_dir/npm/node_modules/pi-openai-usage"
+usage_package_json="$usage_package_root/package.json"
+usage_snapshot_target="$usage_package_root/src/usage-snapshot.ts"
+usage_format_target="$usage_package_root/src/format.ts"
+usage_margin_patch="$repo_root/pi-extensions/patches/pi-openai-usage-0.1.3-weekly-margin.patch"
 footer_package_target="$agent_dir/npm/node_modules/pi-footer/src/index.ts"
 chrome_target="$agent_dir/npm/node_modules/pi-chrome/extensions/chrome-profile-bridge/index.ts"
-usage_target="$agent_dir/npm/node_modules/@calesennett/pi-codex-usage/src/codex-usage/format.ts"
-usage_extension_target="$agent_dir/npm/node_modules/@calesennett/pi-codex-usage/extensions/codex-usage-status.ts"
 
 show_status_fn() {
+  local status=0
   echo "Repo:         $repo_root"
   echo "Pi agent dir: $agent_dir"
   echo "Footer src:   $footer_source"
   echo "Footer dst:   $footer_target"
+  echo "Usage src:    $usage_source"
+  echo "Usage dst:    $usage_target"
+  echo "Usage pkg:    $usage_package_root"
+  echo "Margin patch: $usage_margin_patch"
   echo "pi-footer:    $footer_package_target"
   echo "pi-chrome:    $chrome_target"
-  echo "codex-usage:  $usage_target"
-  echo "codex-ext:    $usage_extension_target"
   echo
-  for path in "$footer_source" "$footer_target" "$footer_package_target" "$chrome_target" "$usage_target" "$usage_extension_target"; do
+  for path in "$footer_source" "$footer_target" "$usage_source" "$usage_target" "$usage_package_json" "$usage_snapshot_target" "$usage_format_target" "$usage_margin_patch" "$footer_package_target" "$chrome_target"; do
     if [[ -e "$path" ]]; then
       echo "ok      $path"
     else
       echo "missing $path"
+      status=1
     fi
   done
+
+  if ! python3 - "$footer_source" "$footer_target" "$usage_source" "$usage_target" "$usage_package_json" "$usage_snapshot_target" "$usage_format_target" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+source_path, target_path, usage_source_path, usage_target_path, usage_package_json, usage_snapshot_path, usage_format_path = map(Path, sys.argv[1:])
+if not source_path.exists() or not target_path.exists():
+    raise SystemExit(1)
+
+def usage_key(path: Path) -> str | None:
+    config = json.loads(path.read_text(encoding="utf-8"))
+    for line in config.get("lines", []):
+        for widget in line:
+            if widget.get("id") == "jp-openai-usage":
+                return widget.get("options", {}).get("externalStatusKey")
+    return None
+
+source_key = usage_key(source_path)
+target_key = usage_key(target_path)
+ok = True
+if source_key == "openai-usage":
+    print("ok      canonical usage key: openai-usage")
+else:
+    print(f"drift   canonical usage key: {source_key}")
+    ok = False
+if target_key == source_key and target_key:
+    print(f"ok      installed usage key: {target_key}")
+else:
+    print(f"drift   installed usage key: {target_key} (expected {source_key})")
+    ok = False
+usage_version = json.loads(usage_package_json.read_text(encoding="utf-8")).get("version")
+if usage_version == "0.1.3":
+    print(f"ok      pi-openai-usage version: {usage_version}")
+else:
+    print(f"drift   pi-openai-usage version: {usage_version} (expected 0.1.3)")
+    ok = False
+if source_path.read_bytes() == target_path.read_bytes():
+    print("ok      footer config is synchronized")
+else:
+    print("drift   footer config differs from canonical source")
+    ok = False
+if usage_source_path.read_bytes() == usage_target_path.read_bytes():
+    print("ok      OpenAI usage config is synchronized")
+else:
+    print("drift   OpenAI usage config differs from canonical source")
+    ok = False
+raise SystemExit(0 if ok else 1)
+PY
+  then
+    status=1
+  fi
+  if (cd "$usage_package_root" && git apply --reverse --check "$usage_margin_patch" >/dev/null 2>&1); then
+    echo "ok      weekly margin patch is applied"
+  else
+    echo "drift   weekly margin patch is missing or incomplete"
+    status=1
+  fi
+  return "$status"
 }
 
 backup_file() {
   local path="$1"
   [[ -e "$path" ]] || return 0
-  local backup="$path.bak-pi-statusline-$(date +%Y%m%d-%H%M%S)"
+  local backup
+  backup="$path.bak-pi-statusline-$(date +%Y%m%d-%H%M%S)"
   cp -f -- "$path" "$backup"
   echo "backup  $backup"
 }
 
+patch_openai_usage_margin() {
+  if [[ ! -f "$usage_package_json" ]]; then
+    echo "Missing pi-openai-usage package: $usage_package_root" >&2
+    return 1
+  fi
+  if [[ ! -f "$usage_margin_patch" ]]; then
+    echo "Missing usage margin patch: $usage_margin_patch" >&2
+    return 1
+  fi
+
+  local usage_version
+  usage_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["version"])' "$usage_package_json")"
+  if [[ "$usage_version" != "0.1.3" ]]; then
+    echo "Unsupported pi-openai-usage version: $usage_version (expected 0.1.3)" >&2
+    return 1
+  fi
+  if (cd "$usage_package_root" && git apply --reverse --check "$usage_margin_patch" >/dev/null 2>&1); then
+    echo "ok      weekly margin patch already applied"
+    return 0
+  fi
+
+  (cd "$usage_package_root" && git apply --check "$usage_margin_patch")
+  backup_file "$usage_snapshot_target"
+  backup_file "$usage_format_target"
+  (cd "$usage_package_root" && git apply "$usage_margin_patch")
+  echo "patched pi-openai-usage weekly margin"
+}
+
 if [[ "$show_status" -eq 1 ]]; then
   show_status_fn
-  exit 0
+  exit $?
 fi
 
 if [[ "$no_footer_config" -eq 0 ]]; then
@@ -87,16 +188,27 @@ if [[ "$no_footer_config" -eq 0 ]]; then
   echo "copied  pi-footer config"
 fi
 
+if [[ "$no_usage_config" -eq 0 ]]; then
+  if [[ ! -f "$usage_source" ]]; then
+    echo "Missing source usage config: $usage_source" >&2
+    exit 1
+  fi
+  mkdir -p -- "$(dirname -- "$usage_target")"
+  backup_file "$usage_target"
+  cp -f -- "$usage_source" "$usage_target"
+  echo "copied  pi-openai-usage config"
+fi
+
 if [[ "$no_package_patches" -eq 1 ]]; then
   echo
   echo "Next step inside Pi: /reload"
   exit 0
 fi
 
+patch_openai_usage_margin
+
 export FOOTER_PACKAGE_TARGET="$footer_package_target"
 export CHROME_TARGET="$chrome_target"
-export USAGE_TARGET="$usage_target"
-export USAGE_EXTENSION_TARGET="$usage_extension_target"
 
 python3 <<'PY'
 import os
@@ -131,8 +243,6 @@ def replace_regex(path_value: str, pattern: str, replacement: str, label: str) -
 
 footer_package = os.environ["FOOTER_PACKAGE_TARGET"]
 chrome = os.environ["CHROME_TARGET"]
-usage = os.environ["USAGE_TARGET"]
-usage_ext = os.environ["USAGE_EXTENSION_TARGET"]
 
 footer_map_replacement = '''          )
             .map((entry) => entry.value)
@@ -182,162 +292,7 @@ chrome_status_replacement = '''\tconst updateChromeStatus = (ctx: ExtensionConte
 replace_regex(chrome, r'''\tconst authCountdownLabel = \(\): string => \{.*?\r?\n\t\};''', chrome_auth_replacement, "pi-chrome compact auth label")
 replace_regex(chrome, r'''\tconst updateChromeStatus = \(ctx: ExtensionContext\): void => \{.*?\r?\n\t\};''', chrome_status_replacement, "pi-chrome compact status")
 
-usage_ext_import_replacement = '''import { formatCompactStatus, formatStatus, unavailableStatus } from "../src/codex-usage/format";'''
-usage_ext_const_replacement = '''const EXTENSION_ID = "codex-usage";
-const COMPACT_EXTENSION_ID = `${EXTENSION_ID}.compact`;'''
-usage_ext_stop_replacement = '''\tprivate stop(ctx: ExtensionContext): void {
-\t\tif (this.timer) clearInterval(this.timer);
-\t\tthis.timer = undefined;
-\t\tthis.queued = undefined;
-\t\tthis.ctx = undefined;
-\t\tthis.generation++;
-\t\tif (ctx.hasUI) {
-\t\t\tctx.ui.setStatus(EXTENSION_ID, undefined);
-\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
-\t\t}
-\t}
 
-\tprivate enqueuePreferenceOperation'''
-usage_ext_refresh_replacement = '''\tprivate async refresh(ctx = this.ctx, modelId = ctx?.model?.id, generation = this.generation): Promise<void> {
-\t\tif (!ctx?.hasUI || !this.isCurrent(generation)) return;
-
-\t\tif (this.inFlight) {
-\t\t\tthis.queued = { ctx, generation, modelId };
-\t\t\treturn;
-\t\t}
-
-\t\tthis.inFlight = true;
-\t\ttry {
-\t\t\tconst usage = await getUsage(modelId);
-\t\t\tif (!this.isCurrent(generation)) return;
-\t\t\tthis.lastUsage = usage;
-\t\t\tctx.ui.setStatus(EXTENSION_ID, "");
-\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, usage, this.preferences));
-\t\t} catch (error) {
-\t\t\tif (!this.isCurrent(generation)) return;
-\t\t\tif (errorMessage(error).includes(MISSING_AUTH_ERROR)) {
-\t\t\t\tthis.lastUsage = undefined;
-\t\t\t\tctx.ui.setStatus(EXTENSION_ID, undefined);
-\t\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
-\t\t\t} else {
-\t\t\t\tctx.ui.setStatus(EXTENSION_ID, unavailableStatus(ctx, modelId));
-\t\t\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, undefined);
-\t\t\t}
-\t\t} finally {
-\t\t\tthis.inFlight = false;
-\t\t\tconst queued = this.queued;
-\t\t\tthis.queued = undefined;
-\t\t\tif (queued && this.isCurrent(queued.generation)) void this.refresh(queued.ctx, queued.modelId, queued.generation);
-\t\t}
-\t}
-
-\tprivate renderLast'''
-usage_ext_render_replacement = '''\tprivate renderLast(ctx: ExtensionContext): boolean {
-\t\tif (!ctx.hasUI || !this.lastUsage) return false;
-\t\tctx.ui.setStatus(EXTENSION_ID, "");
-\t\tctx.ui.setStatus(COMPACT_EXTENSION_ID, formatCompactStatus(ctx, this.lastUsage, this.preferences));
-\t\treturn true;
-\t}
-
-\tprivate savePreferences'''
-replace_regex(
-    usage_ext,
-    r'''import \{ (?:formatCompactStatus, )?formatStatus, unavailableStatus \} from "\.\./src/codex-usage/format";''',
-    usage_ext_import_replacement,
-    "codex-usage import compact formatter",
-)
-replace_regex(
-    usage_ext,
-    r'''const EXTENSION_ID = "codex-usage";\r?\n(?:const COMPACT_EXTENSION_ID = `\$\{EXTENSION_ID\}\.compact`;\r?\n?)?''',
-    usage_ext_const_replacement + "\n",
-    "codex-usage compact status key",
-)
-replace_regex(
-    usage_ext,
-    r'''\tprivate stop\(ctx: ExtensionContext\): void \{.*?\r?\n\t\}\r?\n\r?\n\tprivate enqueuePreferenceOperation''',
-    usage_ext_stop_replacement,
-    "codex-usage stop clears compact status",
-)
-replace_regex(
-    usage_ext,
-    r'''\tprivate async refresh\(ctx = this\.ctx, modelId = ctx\?\.model\?\.id, generation = this\.generation\): Promise<void> \{.*?\r?\n\t\}\r?\n\r?\n\tprivate renderLast''',
-    usage_ext_refresh_replacement,
-    "codex-usage compact refresh method",
-)
-replace_regex(
-    usage_ext,
-    r'''\tprivate renderLast\(ctx: ExtensionContext\): boolean \{.*?\r?\n\t\}\r?\n\r?\n\tprivate savePreferences''',
-    usage_ext_render_replacement,
-    "codex-usage compact renderLast method",
-)
-
-usage_percent_replacement = '''const ACTIVE_DAYS_PER_WEEK = 6;
-const WEEK_SECONDS = 7 * 24 * 60 * 60;
-const DAY_SECONDS = 24 * 60 * 60;
-
-function clamp(value: number, min: number, max: number): number {
-\treturn Math.min(max, Math.max(min, value));
-}
-
-function formatBudgetCushionDays(theme: Theme, usage: UsageSnapshot): string | null {
-\tconst left7d = usage.leftPercent["7d"];
-\tconst reset7d = usage.resetInSeconds["7d"];
-\tif (left7d === null || reset7d === null || Number.isNaN(reset7d)) return null;
-
-\tconst used7d = 100 - left7d;
-\tconst elapsedSeconds = clamp(WEEK_SECONDS - reset7d, 0, WEEK_SECONDS);
-\tconst elapsedActiveDays = clamp(elapsedSeconds / DAY_SECONDS, 0, ACTIVE_DAYS_PER_WEEK);
-\tconst expectedUsed = clamp(elapsedActiveDays * (100 / ACTIVE_DAYS_PER_WEEK), 0, 100);
-\tconst dailyBudget = 100 / ACTIVE_DAYS_PER_WEEK;
-\tconst rounded = Math.round(((expectedUsed - used7d) / dailyBudget) * 10) / 10;
-\tconst cushionDays = Object.is(rounded, -0) ? 0 : rounded;
-\tconst color = usage.isLimited || cushionDays <= -0.9 ? "error" : cushionDays <= -0.3 ? "warning" : "success";
-\treturn theme.fg(color, `colchón:${cushionDays > 0 ? "+" : ""}${cushionDays.toFixed(1)}d`);
-}
-
-function formatPercent(theme: Theme, leftPercent: number | null, mode: PercentMode): string {
-\tif (leftPercent === null) return theme.fg("muted", "--");
-
-\tconst color = leftPercent <= 10 ? "error" : leftPercent <= 25 ? "warning" : "success";
-\tconst displayed = mode === "left" ? leftPercent : 100 - leftPercent;
-\treturn theme.fg(color, `${Math.round(displayed)}% ${mode}`);
-}
-
-function formatCompactPercent(theme: Theme, leftPercent: number | null, mode: PercentMode): string {
-\tif (leftPercent === null) return theme.fg("muted", "--");
-
-\tconst color = leftPercent <= 10 ? "error" : leftPercent <= 25 ? "warning" : "success";
-\tconst displayed = mode === "left" ? leftPercent : 100 - leftPercent;
-\treturn theme.fg(color, `${Math.round(displayed)}%`);
-}
-
-function formatCountdown'''
-usage_compact_replacement = '''export function formatCompactStatus(ctx: ExtensionContext, usage: UsageSnapshot, preferences: Preferences): string {
-\tconst theme = ctx.ui.theme;
-\tconst separator = theme.fg("dim", " · ");
-\tconst usageText = windowNames
-\t\t.map(name => `${theme.fg("dim", `${name}:`)}${formatCompactPercent(theme, usage.leftPercent[name], preferences.usageMode)}`)
-\t\t.join(separator);
-\tconst cushion = formatBudgetCushionDays(theme, usage);
-\tconst cushionText = cushion ? `${separator}${cushion}` : "";
-\tconst reset = formatCountdown(usage.resetInSeconds[preferences.refreshWindow]);
-\tconst resetText = reset ? `${separator}${theme.fg("dim", `↺${preferences.refreshWindow}:${reset}`)}` : "";
-\treturn `${usageText}${cushionText}${resetText}`;
-}
-
-export function unavailableStatus'''
-replace_regex(
-    usage,
-    r'''(?:const ACTIVE_DAYS_PER_WEEK = 6;.*?\r?\n\r?\n)?function formatPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n(?:function formatCompactPercent\(theme: Theme, leftPercent: number \| null, mode: PercentMode\): string \{.*?\r?\n\}\r?\n\r?\n)?function formatCountdown''',
-    usage_percent_replacement,
-    "codex-usage compact percent",
-)
-replace_regex(
-    usage,
-    r'''(?:export function formatCompactStatus\(ctx: ExtensionContext, usage: UsageSnapshot, preferences: Preferences\): string \{.*?\r?\n\}\r?\n\r?\n)?export function unavailableStatus''',
-    usage_compact_replacement,
-    "codex-usage compact status",
-)
 PY
 
 echo

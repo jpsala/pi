@@ -1,0 +1,169 @@
+--- a/src/settings/values.ts
++++ b/src/settings/values.ts
+@@ -4,7 +4,7 @@
+   parseToolToggleId,
+   type CodePreviewToolName,
+ } from "../tools/names";
+-import { formatToolsSettingValue, getEffectiveCodePreviewTools } from "../tools/policy";
++import { formatToolsSettingValue } from "../tools/policy";
+ import {
+   CODE_PREVIEW_SETTING_DEFINITIONS,
+   CODE_PREVIEW_SETTING_KEYS,
+@@ -33,7 +33,9 @@
+ ): CodePreviewSettings {
+   const next = {} as CodePreviewSettings;
+   for (const key of CODE_PREVIEW_SETTING_KEYS) normalizeSetting(next, data, fallback, key);
+-  return withRequiredToolRenderers(next);
++  // The tools setting is an explicit user allowlist. Do not infer enabled tools from
++  // content-preview settings: that made an intentional all-off selection impossible to persist.
++  return next;
+ }
+ 
+ function normalizeSetting<K extends keyof CodePreviewSettings>(
+@@ -63,14 +65,8 @@
+     const tool = parseToolToggleId(id);
+     if (tool) next.tools = updateToolToggle(current.tools, tool, value);
+   }
+-  return withRequiredToolRenderers(next);
+-}
+-
+-function withRequiredToolRenderers(settings: CodePreviewSettings): CodePreviewSettings {
+-  return {
+-    ...settings,
+-    tools: getEffectiveCodePreviewTools(settings.tools, settings),
+-  };
++  // Keep the explicit tool selection; output-preview settings must not silently re-enable it.
++  return next;
+ }
+ 
+ function updateToolToggle(
+--- a/src/tools/selection.ts
++++ b/src/tools/selection.ts
+@@ -1,11 +1,13 @@
+ import { codePreviewSettings } from "../settings/index";
+ import { ALL_CODE_PREVIEW_TOOLS, parseCodePreviewTools, type CodePreviewToolName } from "./names";
+-import { formatToolsSettingValue, getEffectiveCodePreviewToolSet } from "./policy";
++import { formatToolsSettingValue } from "./policy";
+ 
+ export function getEnabledCodePreviewTools(): Set<CodePreviewToolName> {
+   const configured =
+     parseCodePreviewTools(process.env.CODE_PREVIEW_TOOLS) ?? codePreviewSettings.tools;
+-  return getEffectiveCodePreviewToolSet(configured, codePreviewSettings);
++  // The tools setting is an explicit user allowlist. Output-preview settings must not
++  // silently re-enable tools after the user turns them off.
++  return new Set(configured);
+ }
+ 
+ export function formatEnabledCodePreviewTools(enabled = getEnabledCodePreviewTools()): string {
+--- a/src/settings/ui/index.ts
++++ b/src/settings/ui/index.ts
+@@ -96,7 +96,11 @@
+         "Toggle tool previews individually. Changes take effect after /reload. Tools already owned by another extension are skipped automatically.",
+       currentValue: summarizeTools(current),
+       submenu: (_currentValue, done) =>
+-        new ToolPreviewSettingsSubmenu(formatSettingValue(getCurrent(), "tools"), done),
++        new ToolPreviewSettingsSubmenu(
++          formatSettingValue(getCurrent(), "tools"),
++          done,
++          onSettingChange,
++        ),
+     },
+     groupItem("warningsSafety"),
+     groupItem("advanced"),
+--- a/src/settings/ui/submenus.ts
++++ b/src/settings/ui/submenus.ts
+@@ -74,9 +74,15 @@
+ export class ToolPreviewSettingsSubmenu extends Container {
+   private readonly selectedTools: Set<CodePreviewToolName>;
+   private readonly settingsList: SettingsList;
++  private readonly onChange: SettingChangeHandler;
+ 
+-  constructor(currentValue: string, done: (selectedValue?: string) => void) {
++  constructor(
++    currentValue: string,
++    done: (selectedValue?: string) => void,
++    onChange: SettingChangeHandler,
++  ) {
+     super();
++    this.onChange = onChange;
+     this.selectedTools = parseCodePreviewTools(currentValue) ?? new Set(ALL_CODE_PREVIEW_TOOLS);
+     this.settingsList = new SettingsList(
+       createToolToggleItems(this.selectedTools, getCodePreviewToolStatuses()),
+@@ -87,6 +93,9 @@
+         if (!tool) return;
+         if (value === "on") this.selectedTools.add(tool);
+         else this.selectedTools.delete(tool);
++        // Persist each toggle immediately so an all-off selection is not lost when
++        // leaving/reloading the submenu.
++        this.onChange("tools", this.formatSelectedTools());
+       },
+       () => done(this.formatSelectedTools()),
+     );
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -352,7 +352,8 @@
+ function normalizeSettings(data, fallback = codePreviewSettings) {
+ 	const next = {};
+ 	for (const key of CODE_PREVIEW_SETTING_KEYS) normalizeSetting(next, data, fallback, key);
+-	return withRequiredToolRenderers(next);
++	// The tools setting is an explicit user allowlist. Do not infer enabled tools from content-preview settings.
++	return next;
+ }
+ function normalizeSetting(next, data, fallback, key) {
+ 	next[key] = CODE_PREVIEW_SETTING_DEFINITIONS[key].normalize(getObjectValue(data, key), fallback[key]);
+@@ -366,13 +367,8 @@
+ 		const tool = parseToolToggleId(id);
+ 		if (tool) next.tools = updateToolToggle(current.tools, tool, value);
+ 	}
+-	return withRequiredToolRenderers(next);
+-}
+-function withRequiredToolRenderers(settings) {
+-	return {
+-		...settings,
+-		tools: getEffectiveCodePreviewTools(settings.tools, settings)
+-	};
++	// Keep the explicit tool selection; output-preview settings must not silently re-enable it.
++	return next;
+ }
+ function updateToolToggle(currentTools, tool, value) {
+ 	const enabled = new Set(currentTools);
+@@ -974,7 +970,9 @@
+ //#endregion
+ //#region src/tools/selection.ts
+ function getEnabledCodePreviewTools() {
+-	return getEffectiveCodePreviewToolSet(parseCodePreviewTools(process.env.CODE_PREVIEW_TOOLS) ?? codePreviewSettings.tools, codePreviewSettings);
++	const configured = parseCodePreviewTools(process.env.CODE_PREVIEW_TOOLS) ?? codePreviewSettings.tools;
++	// The tools setting is an explicit user allowlist. Output-preview settings must not silently re-enable tools.
++	return new Set(configured);
+ }
+ function formatEnabledCodePreviewTools(enabled = getEnabledCodePreviewTools()) {
+ 	return formatToolsSettingValue(ALL_CODE_PREVIEW_TOOLS.filter((tool) => enabled.has(tool)));
+@@ -1315,14 +1313,18 @@
+ var ToolPreviewSettingsSubmenu = class extends Container {
+ 	selectedTools;
+ 	settingsList;
+-	constructor(currentValue, done) {
++	onChange;
++	constructor(currentValue, done, onChange) {
+ 		super();
++		this.onChange = onChange;
+ 		this.selectedTools = parseCodePreviewTools(currentValue) ?? new Set(ALL_CODE_PREVIEW_TOOLS);
+ 		this.settingsList = new SettingsList(createToolToggleItems(this.selectedTools, getCodePreviewToolStatuses()), ALL_CODE_PREVIEW_TOOLS.length + 2, getSettingsListTheme(), (id, value) => {
+ 			const tool = parseToolToggleId(id);
+ 			if (!tool) return;
+ 			if (value === "on") this.selectedTools.add(tool);
+ 			else this.selectedTools.delete(tool);
++			// Persist each toggle immediately so an all-off selection is not lost when leaving/reloading the submenu.
++			this.onChange("tools", this.formatSelectedTools());
+ 		}, () => done(this.formatSelectedTools()));
+ 		this.addChild(new Text("Preview tools", 0, 0));
+ 		this.addChild(new Text("Toggle tool previews individually. Changes take effect after /reload.", 0, 0));
+@@ -1458,7 +1460,7 @@
+ 			label: "Enabled tools",
+ 			description: "Toggle tool previews individually. Changes take effect after /reload. Tools already owned by another extension are skipped automatically.",
+ 			currentValue: summarizeTools(current),
+-			submenu: (_currentValue, done) => new ToolPreviewSettingsSubmenu(formatSettingValue(getCurrent(), "tools"), done)
++			submenu: (_currentValue, done) => new ToolPreviewSettingsSubmenu(formatSettingValue(getCurrent(), "tools"), done, onSettingChange)
+ 		},
+ 		groupItem("warningsSafety"),
+ 		groupItem("advanced")

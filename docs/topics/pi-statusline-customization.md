@@ -10,7 +10,11 @@ triggers:
   - otra pc
   - actualizar extensiones
 primary_refs:
+  - ../tracks/pi-ui-usage-evaluation.md
   - ../../pi-extensions/pi-footer.json
+  - ../../pi-extensions/pi-openai-usage.json
+  - ../../pi-extensions/codex-quota.ts
+  - ../../pi-extensions/patches/pi-openai-usage-0.1.3-weekly-margin.patch
   - ../../scripts/apply-pi-statusline-customization.ps1
   - ../../scripts/apply-pi-statusline-customization.sh
 ---
@@ -23,7 +27,7 @@ Configuracion local de JP para compactar el footer/statusline de Pi sin perder i
 
 Mantener una sola linea compacta con:
 
-- modelo, thinking, cwd, git, diff, contexto, ventana de contexto y cache;
+- modelo, thinking, cwd, contexto, ventana de contexto y cache;
 - statuses inline: `link`, `win-input`, `chrome`, `usage`;
 - sin segunda fila automatica de extension statuses para info ya representada inline;
 - si un proyecto publica status propio util (ej. `pi-lens` con `LSP Failed: rust`), mantener solo esa informacion en segunda linea.
@@ -31,14 +35,17 @@ Mantener una sola linea compacta con:
 Formato esperado aproximado:
 
 ```text
-gpt-5.6-sol • think:high • dir:pi • git:main • (+0,-0) • ctx:30.6% • 272k • cache:2.3M • link: offline • win-input • chrome:∞ • usage:5h:86% · 7d:33% · colchón:+1.3d · ↺7d:3d0h
+gpt-5.6-sol • think:high • dir:pi • ctx:30.6% • 272k • cache:2.3M • link: offline • win-input • chrome:∞ • usage:7d: 87% · ↺ 6d2h · margen -2h
 ```
 
 ## Archivos canonicos en este repo
 
 - `pi-extensions/pi-footer.json`: snapshot versionable de `~/.pi/agent/extensions/pi-footer.json`.
-- `scripts/apply-pi-statusline-customization.ps1`: aplica la config y parches locales en una instalacion Windows de Pi.
+- `pi-extensions/pi-openai-usage.json`: snapshot de la salida compacta y polling de `pi-openai-usage`.
+- `pi-extensions/patches/pi-openai-usage-0.1.3-weekly-margin.patch`: margen automatico semanal con los defaults de `/codex-quota`.
+- `scripts/apply-pi-statusline-customization.ps1`: copia ambas configs y reaplica los parches locales de `pi-openai-usage`, `pi-footer` y `pi-chrome` en Windows.
 - `scripts/apply-pi-statusline-customization.sh`: aplica lo mismo en Linux/macOS, incluyendo VPS.
+- El footer consume `openai-usage`, publicado por la version global fijada `pi-openai-usage@0.1.3`. Los restauradores no instalan paquetes: requieren que el productor ya exista.
 
 ## Instalacion / restauracion
 
@@ -64,18 +71,9 @@ Luego, dentro de Pi:
 
 El script hace backups con sufijo `.bak-pi-statusline-YYYYMMDD-HHMMSS` antes de pisar archivos existentes.
 
-## Resultado validado
+## Resultado esperado
 
-Validado en `C:\dev\pi` y `C:\dev\dictation-tauri` tras `/reload`.
-
-Caso `dictation-tauri` con `pi-lens` project-local:
-
-```text
-gpt-5.6-sol • think:high • dir:dictation-tauri • git:main • (+12199,-1241) • ctx:42.7% • 272k • cache:3.6M • link: offline • win-input • chrome:∞ • usage:5h:82% · 7d:33% · colchón:+1.3d · ↺7d:3d0h
-LSP Failed: rust
-```
-
-El duplicado `Codex 5h NN% 7d NN%` ya no aparece; la segunda linea queda reservada para status project-local no duplicado.
+`pi-footer` toma el valor publicado bajo `openai-usage` y lo muestra inline con prefijo `usage:`. La segunda linea queda reservada para statuses project-local no duplicados, por ejemplo `LSP Failed: rust`. El smoke RPC mas reciente publico `7d: 87% · ↺ 6d2h · margen -2h`; falta confirmar visualmente el margen despues de `/reload`.
 
 ## Cambios guardados
 
@@ -89,9 +87,10 @@ Destino instalado:
 
 Decisiones:
 
+- Los widgets de rama y diff Git se omiten porque su consulta degradaba la experiencia en Windows.
 - `jp-flex` queda deshabilitado para evitar huecos grandes que fuerzan wrap visual.
-- `extensionStatusRow.hiddenKeys` oculta `chrome`, `codex-usage`, `codex-usage.compact`, `link`, `telegram`, `windows-input`.
-- `link`, `windows-input`, `chrome` y `codex-usage.compact` se renderizan como widgets `external-status` inline en la linea principal.
+- `extensionStatusRow.hiddenKeys` oculta `chrome`, `openai-usage`, `link`, `telegram`, `windows-input` en la fila automatica.
+- `link`, `windows-input`, `chrome` y `openai-usage` se renderizan como widgets `external-status` inline en la linea principal.
 
 ### `pi-footer` package patch
 
@@ -101,9 +100,18 @@ Destino parcheado:
 ~/.pi/agent/npm/node_modules/pi-footer/src/index.ts
 ```
 
-Cambio: filtrar de la fila automatica cualquier status con valor visible tipo `Codex 5h NN% 7d NN%`. Esto evita que una publicacion residual o un key distinto duplique la informacion que ya esta en `codex-usage.compact`, manteniendo otros statuses project-local como `LSP Failed: rust`.
+Cambio defensivo: filtrar de la fila automatica valores legacy tipo `Codex 5h NN% 7d NN%`. La key configurada `openai-usage` se oculta en esa fila y se renderiza inline, manteniendo otros statuses project-local como `LSP Failed: rust`.
 
-Razon: en `C:\dev\dictation-tauri`, luego de ocultar keys y parchear `pi-codex-usage`, el texto `Codex 5h 18% 7d 67%` seguia apareciendo en la fila automatica. El filtro por valor visible fue la solucion efectiva.
+### `pi-openai-usage` package patch
+
+Destinos parcheados:
+
+```text
+~/.pi/agent/npm/node_modules/pi-openai-usage/src/usage-snapshot.ts
+~/.pi/agent/npm/node_modules/pi-openai-usage/src/format.ts
+```
+
+Patch canonico: `pi-extensions/patches/pi-openai-usage-0.1.3-weekly-margin.patch`. Solo aplica a la version fijada `0.1.3`; los restauradores fallan ante otra version para evitar modificaciones ciegas.
 
 ### `pi-chrome`
 
@@ -129,39 +137,43 @@ chrome:15m
 chrome:<1m
 ```
 
-### `@calesennett/pi-codex-usage`
+### Fuente de cuota Codex
 
-Destino parcheado:
+`@calesennett/pi-codex-usage` fue el productor historico de `codex-usage`; la preferencia legacy `pi-codex-usage.usageMode` puede seguir en `settings.json` sin producir ningun status.
 
-```text
-~/.pi/agent/npm/node_modules/@calesennett/pi-codex-usage/src/codex-usage/format.ts
-```
+`pi-openai-usage@0.1.3` fue adoptada porque:
 
-Cambios:
+- no registra tools LLM ni agrega contexto;
+- mantiene cache en memoria y omite requests mientras el snapshot siga fresco;
+- usa polling de 10 minutos en esta PC;
+- permite configurar ventanas, resets, barras, porcentajes, colores, labels y separadores.
 
-1. Compactar el status `codex-usage.compact`.
-2. Agregar `colchón:+/-N.Nd`, dias equivalentes de presupuesto normal acumulado contra el ritmo esperado de 6 dias activos: `0.0d` es ir justo al plan, positivo es margen y negativo es estar pasado.
-3. No publicar el status completo `codex-usage` en estado normal, para evitar una segunda linea duplicada con la misma informacion en otro formato.
-4. `pi-footer` ademas filtra cualquier valor residual tipo `Codex 5h NN% 7d NN%` si aparece bajo otra key.
+Compatibilidad observada: el endpoint devolvio una sola ventana primaria de 604800 segundos y ninguna secundaria, mientras `0.1.3` llama rigidamente `fiveHour` al slot primario. La config etiqueta ese slot como `7d`, muestra su countdown y oculta los slots secundarios.
 
-Antes:
+El parche local conserva `limit_window_seconds`, identifica la ventana semanal por 604800 segundos y agrega `margen ±Nh` al mismo status, sin otra consulta. Usa la formula/defaults de `codex-quota.ts`: 12 h/dia × 6,5 dias/semana; margen = capacidad restante al ritmo observado menos horas activas planificadas. Si no hay ritmo suficiente muestra `margen --` y si no existe ventana semanal omite el widget.
 
-```text
-5h 88% left · 7d 34% left · 7d reset 3d0h
-Codex 5h 12% 7d 66%
-```
+La extension global `codex-quota.ts` sigue disponible para ver el detalle de ritmo, horas soportadas, presupuesto diario y margen bajo demanda. Su fuente portable canonica vive en `pi-extensions/codex-quota.ts`; cada host instala una copia global sin compartir autenticacion.
 
-Despues:
+Comparacion corta:
 
-```text
-5h:88% · 7d:34% · colchón:+1.3d · ↺7d:3d0h
-```
+| Extension | Recursos | Configuracion | Encaje local |
+| --- | --- | --- | --- |
+| `pi-openai-usage` | cache en memoria; polling configurable 15s-10m; sin tools LLM | muy alta | recomendada |
+| `@narumitw/pi-usage` | cache 5m; auth runtime de Pi | formato casi fijo | robusta, menos editable |
+| `pi-codex-status` | inicio + headers oportunistas; cache en disco | baja | eficiente, registra `/status` |
+| `@calesennett/pi-codex-usage` | 1m y refresh tras turnos | solo `left/used` | compatible con key legacy, limitada |
+| `pi-quota-status` | 1m, estado persistente y reconciliacion CLI | adapters/thresholds | demasiado compleja para solo Codex |
 
-Nota: los porcentajes siguen respetando la preferencia de `pi-codex-usage` (`left` o `used`), pero el compact status no imprime `left`/`used` para ahorrar espacio. Si se cambia a `used`, recordar semanticamente que el porcentaje mostrado pasa a ser usado.
+Fuentes principales:
+
+- `pi-openai-usage`: <https://github.com/studioarray/pi-openai-usage/blob/6c5e40510e7f521663b6078619732596c052dc59/README.md#L55-L98>
+- cache de `pi-openai-usage`: <https://github.com/studioarray/pi-openai-usage/blob/6c5e40510e7f521663b6078619732596c052dc59/src/usage-refresh-coordinator.ts#L66-L94>
+- polling de `@calesennett`: <https://github.com/calesennett/pi-codex-usage/blob/2cef805bc852b3f000763963a004521caa7f3e3f/extensions/codex-usage-status.ts#L22-L45>
+- `@narumitw/pi-usage`: <https://github.com/narumiruna/pi-extensions/blob/822ddf011ceeb6846f5da74d3bab6d4ee81e38f0/extensions/pi-usage/README.md#L5-L23>
 
 ## Despues de actualizar extensiones
 
-Una actualizacion de `pi-chrome`, `pi-footer` o `pi-codex-usage` puede pisar los parches en `node_modules` o cambiar APIs internas. Reaplicar:
+Una reinstalacion de `pi-openai-usage@0.1.3` o una actualizacion de `pi-chrome`/`pi-footer` puede pisar los parches locales. Reaplicar:
 
 ```powershell
 ./scripts/apply-pi-statusline-customization.ps1 -Status
@@ -175,23 +187,17 @@ scripts/apply-pi-statusline-customization.sh --status
 scripts/apply-pi-statusline-customization.sh
 ```
 
-Si el script avisa que un patron no aparece, abrir el archivo upstream y adaptar el parche manualmente; no forzar reemplazos ciegos.
+`-Status`/`--status` falla si alguna config instalada difiere de su snapshot, el widget no consume `openai-usage`, la version no es `0.1.3` o falta el parche de margen. Si cambia la version, adaptar el patch/restaurador; no forzarlo.
 
 ## Diagnostico rapido
 
-Si vuelve a aparecer una segunda linea con `Codex ...`:
+Si `usage:` desaparece:
 
-1. Ejecutar `/reload`.
-2. Reaplicar el restaurador:
-
-   ```powershell
-   ./scripts/apply-pi-statusline-customization.ps1
-   # o en Linux/VPS:
-   scripts/apply-pi-statusline-customization.sh
-   ```
-
-3. Si persiste, revisar si `pi-footer/src/index.ts` conserva el helper `isDuplicateCodexUsageStatus`.
-4. Si aparece una segunda linea solo con `LSP Failed: ...`, no es duplicado: viene de `pi-lens` u otra extension project-local y puede ser util.
+1. Ejecutar el chequeo; debe informar keys/configs sincronizadas, `pi-openai-usage version: 0.1.3` y `weekly margin patch is applied`.
+2. Si hay drift, reaplicar el restaurador y ejecutar `/reload`.
+3. Verificar con `pi list` que `pi-openai-usage@0.1.3` este instalada y no haya otro productor para la misma informacion. `@narumitw/pi-codex-usage` esta deprecada y no debe instalarse.
+4. Usar `/openai-usage-settings diagnostics` para validar auth, endpoint, config efectiva y ultimo fetch sin imprimir tokens.
+5. Si aparece una segunda linea solo con `LSP Failed: ...`, no es duplicado: viene de `pi-lens` u otra extension project-local y puede ser util.
 
 ## Relacion con windows-input
 
