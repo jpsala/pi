@@ -41,5 +41,5 @@ Ultima actualizacion manual: 2026-07-25.
 
 - **Estado:** `waiting_gate`.
 - **Referencia:** `docs/tracks/pi-ui-usage-evaluation.md`.
-- **Gate:** Confirmar visualmente el margen semanal despues de `/reload`.
-- **Siguiente acción:** Cerrar el track tras el smoke visual o corregir el formato si falla.
+- **Gate:** En una sesión nueva o tras `/reload`, confirmar en Constelaciones que `ffgrep`/`fffind` quedan resumidos, las built-ins no muestran previews colapsadas y el margen semanal sigue visible.
+- **Siguiente acción:** Cerrar el track si el smoke visual pasa; si falla, aislar renderer/load order sin tocar producto.
