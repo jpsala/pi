@@ -2,7 +2,7 @@
 
 Generated cache. Do not edit by hand.
 
-Generated: 2026-07-24T01:47:45.141Z
+Generated: 2026-07-25T14:51:00.031Z
 
 ## Topics
 
@@ -39,7 +39,7 @@ Generated: 2026-07-24T01:47:45.141Z
 
 ## Pi Resources
 
-- Global extensions: advisor-glm.ts, codex-quota.ts, windows-input.ts
+- Global extensions: codex-quota.ts, windows-input.ts
 - Guidance: [pi-agentic-os](../topics/pi-agentic-os.md)
 
 ## Aliases

@@ -58,18 +58,21 @@ Luego ejecutar `/reload` dentro de Pi.
 
 ## Renderer de tools
 
-- Actual adoptado: `pi-code-previews@0.1.36`.
-- Parche activo: `pi-extensions/patches/pi-code-previews-0.1.36-tools-authoritative.patch`; hace que `Enabled tools` sea una allowlist explícita y persiste cada toggle inmediatamente, incluido el estado con todos en `off`.
+- Built-ins: `pi-code-previews@0.1.36`, una línea sin fondo, timing ni previews colapsadas; snapshot `pi-extensions/pi-code-previews.json`.
+- Custom: `pi-tool-display@0.5.0`, sin ownership built-in y con `ffgrep`/`fffind` en `summary`; snapshot `pi-extensions/pi-tool-display.json`.
+- `hideThinkingBlock: true` oculta el razonamiento visible; config viva en `~/.pi/agent/settings.json`.
+- El patch `pi-code-previews-0.1.36-tools-authoritative.patch` queda sólo como antecedente: el paquete instalado volvió al upstream limpio `0.1.36` porque el modo actual habilita las siete built-ins.
 - Anterior: `pi-claude-code-ui@1.0.74`, instalada pero desactivada.
-- Guia canonica de estado, comandos, patch y rollback: `docs/topics/pi-tool-renderer.md`.
+- Guía canónica de estado, fuentes, smokes y rollback: `docs/topics/pi-tool-renderer.md`.
 
-No activar ambos renderers a la vez. El backup `code-previews-trial-20260722-100300` es referencia historica y no debe restaurarse completo porque antecede a otros cambios globales; para volver al renderer anterior se modifican sólo las dos entradas de paquetes y luego `/reload`.
+No dar ownership de la misma tool a dos renderers. Backup del modo ultra compacto: `~/.pi/agent/backups/pi-ultra-compact-20260725-111740/`; el backup histórico de code-previews no debe restaurarse completo. Tras cambios, ejecutar `/reload`.
 
 ## UX compacta de tools y WebUI
 
 Esta repo guarda tambien la configuracion de legibilidad para reducir ruido en Pi. Es configuracion local de JP, no dependencia AOS para repos destino:
 
-- `pi-extensions/pi-tool-display.json`: `read/search/MCP` ocultos por defecto y `bash` en resumen.
+- `pi-extensions/pi-code-previews.json`: built-ins sin fondo ni previews colapsadas.
+- `pi-extensions/pi-tool-display.json`: sin built-ins; `ffgrep`/`fffind` en resumen.
 - `pi-extensions/pi-hide-messages.json`: mantiene visibles los ultimos 12 mensajes.
 - `pi-extensions/pi-keybindings.json`: shortcuts globales compartidos.
 - `pi-extensions/pi-sticky-input.json`: input/scroll compartido, con `mouseScroll: false`.

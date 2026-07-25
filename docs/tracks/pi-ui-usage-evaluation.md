@@ -1,7 +1,7 @@
 ---
 status: active
 started: 2026-07-22
-updated: 2026-07-22
+updated: 2026-07-25
 priority: high
 owner: JP
 related:
@@ -38,10 +38,11 @@ Dejar la TUI de Pi compacta y seleccionable, elegir un renderer granular de tool
 
 ### Renderer de tools
 
-- Actual adoptado: `pi-code-previews@0.1.36`, activo y validado con `/code-preview-health`.
-- Anterior: `pi-claude-code-ui@1.0.74`, instalada pero desactivada mediante `extensions: []`.
-- No restaurar completo el backup historico de `settings.json`: es anterior a cambios globales posteriores. El toggle correcto modifica sólo las dos entradas de renderer.
-- Estado, comandos, toggle y rollback canonicos: `docs/topics/pi-tool-renderer.md`.
+- Modo ultra compacto: `hideThinkingBlock: true`; `pi-code-previews@0.1.36` upstream limpio posee built-ins sin fondo/previews y `pi-tool-display@0.5.0` sólo resume `ffgrep`/`fffind`.
+- El patch local de code-previews quedó retirado; `pi-claude-code-ui@1.0.74` sigue desactivado y no hay ownership solapado.
+- Backups: `pi-ultra-compact-20260725-111740` y `pi-code-previews-clean-restore-20260725-113303`; RPC aislado del renderer pasó.
+- Pendiente sólo el smoke visual tras `/reload`: `ffgrep`, `fffind`, `read`, `edit` y expansión con `Ctrl+O`.
+- Estado, fuentes, config y rollback canónicos: `docs/topics/pi-tool-renderer.md`.
 
 ### Cuota Codex
 
@@ -111,8 +112,8 @@ Integracion aplicada:
 
 ## Proximo Smoke Y Mantenimiento
 
-1. Ejecutar `/reload` y confirmar visualmente `usage:7d: NN% · ↺ NdNh · margen ±Nh`.
-2. RPC confirmo auth, fetch HTTP 200, status con margen y respuesta `success:true`; el cierre del probe RPC en Windows termina luego con un assertion libuv/codigo 127 separado del funcionamiento validado.
+1. Ejecutar `/reload`; confirmar visualmente `ffgrep`/`fffind` compactos y `usage:7d: NN% · ↺ NdNh · margen ±Nh`.
+2. En tools, probar además `read`, `edit` y `Ctrl+O`; en usage, RPC confirmó auth, fetch HTTP 200, status con margen y respuesta `success:true`. El cierre del probe RPC en Windows termina luego con un assertion libuv/código 127 separado del funcionamiento validado.
 3. Si el API vuelve a publicar dos ventanas, el margen seguira buscando la ventana de 604800 segundos; revisar solo la presentacion 5h+7d.
 4. Rollback del margen: restaurar `C:/Users/jpsal/.pi/agent/backups/openai-usage-margin-20260722-112058/` o revertir el patch sobre `pi-openai-usage@0.1.3`, luego `/reload`.
 5. Rollback total: `pi remove npm:pi-openai-usage`, restaurar el backup de adopcion y ejecutar `/reload`.

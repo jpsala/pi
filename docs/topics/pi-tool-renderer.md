@@ -22,10 +22,11 @@ Estado e historia de las extensiones probadas por JP para cambiar la presentacio
 
 ## Respuesta Corta
 
-| Rol | Extension | Estado actual |
+| Rol | Extensión | Estado actual |
 | --- | --- | --- |
-| Renderer adoptado | `pi-code-previews@0.1.36` | instalada y activa |
-| Renderer anterior | `pi-claude-code-ui@1.0.74` | instalada pero desactivada con `extensions: []` |
+| Built-ins | `pi-code-previews@0.1.36` | una línea, sin fondo ni previews colapsadas |
+| Tools custom | `pi-tool-display@0.5.0` | sólo `ffgrep`/`fffind` en `summary` |
+| Renderer anterior | `pi-claude-code-ui@1.0.74` | instalado pero desactivado con `extensions: []` |
 
 No confundir estos renderers con:
 
@@ -33,97 +34,96 @@ No confundir estos renderers con:
 - `pi-footer`, que controla footer/statusline;
 - `pi-tool-display`, que controla visibilidad/resumen de output.
 
-## Renderer Actual: `pi-code-previews`
+## Reparto Efectivo Ultra Compacto
 
-Motivo de adopcion: mejora cada tool de forma granular sin imponer una UI agrupada completa. Decora `bash`, `read`, `write`, `edit`, `grep`, `find` y `ls`, y omite una preview si otra extension ya es dueña de ese tool.
+El modo adoptado el 2026-07-25 evita ownership solapado:
 
-Estado validado el 2026-07-22:
+- `pi-code-previews` posee las siete built-ins, sin fondo ni previews colapsadas;
+- `pi-tool-display` no posee built-ins y sólo resume tools custom explícitas;
+- en `settings.json`, `pi-tool-display` precede a `pi-fff` para interceptar su registro;
+- `hideThinkingBlock: true` oculta los bloques de razonamiento `Verifying…`/`Updating…`.
 
-- paquete fijado: `pi-code-previews@0.1.36`;
-- `/code-preview-health` paso por RPC y visualmente;
-- `/code-preview-settings` abre su configuracion;
-- `Ctrl+O` expande o contrae el output.
-
-## Parche Activo: `tools` Autoritativo
-
-`pi-code-previews@0.1.36` tenia una precedencia inesperada: al apagar todos los
-items de `Enabled tools`, `values.ts` y `tools/selection.ts` volvían a agregar
-los tools cuyo preview de contenido/resultados estaba en `false`. Por eso el
-estado no sobrevivía a `/reload` y sólo `edit` quedaba apagado.
-
-Se aplicó un parche local para que `tools` sea una allowlist explícita del
-usuario. Los previews de contenido pueden seguir en `false`, pero nunca vuelven
-a activar un tool apagado. Además, cada toggle se persiste inmediatamente; no
-depende de cerrar correctamente el submenú. El parche versionado está en:
-
-```text
-pi-extensions/patches/pi-code-previews-0.1.36-tools-authoritative.patch
-```
-
-Backup de esta aplicación:
-
-```text
-C:/Users/jpsal/.pi/agent/backups/code-previews-tools-immediate-save-20260723-103734/
-```
-
-Backup del estado upstream previo a cualquier parche:
-
-```text
-C:/Users/jpsal/.pi/agent/backups/code-previews-tools-authoritative-20260722-131641/
-```
-
-Rollback exacto del parche completo en Windows:
-
-```powershell
-$backup = 'C:\Users\jpsal\.pi\agent\backups\code-previews-tools-immediate-save-20260723-103734'
-$pkg = "$env:USERPROFILE\.pi\agent\npm\node_modules\pi-code-previews"
-Copy-Item "$backup\code-previews.json" "$env:USERPROFILE\.pi\agent\code-previews.json" -Force
-Copy-Item "$backup\package\src\settings\values.ts" "$pkg\src\settings\values.ts" -Force
-Copy-Item "$backup\package\src\tools\selection.ts" "$pkg\src\tools\selection.ts" -Force
-Copy-Item "$backup\package\src\settings\ui\index.ts" "$pkg\src\settings\ui\index.ts" -Force
-Copy-Item "$backup\package\src\settings\ui\submenus.ts" "$pkg\src\settings\ui\submenus.ts" -Force
-Copy-Item "$backup\package\dist\index.js" "$pkg\dist\index.js" -Force
-```
-
-El backup `code-previews-tools-authoritative-20260722-131641` revierte sólo
-la primera versión del parche y deja fuera el guardado inmediato. Para volver
-al upstream original hay que restaurar además sus archivos planos:
-
-```powershell
-$backup = 'C:\Users\jpsal\.pi\agent\backups\code-previews-tools-authoritative-20260722-131641'
-$pkg = "$env:USERPROFILE\.pi\agent\npm\node_modules\pi-code-previews"
-Copy-Item "$backup\code-previews.json" "$env:USERPROFILE\.pi\agent\code-previews.json" -Force
-Copy-Item "$backup\package\values.ts" "$pkg\src\settings\values.ts" -Force
-Copy-Item "$backup\package\selection.ts" "$pkg\src\tools\selection.ts" -Force
-$uiBackup = 'C:\Users\jpsal\.pi\agent\backups\code-previews-tools-immediate-save-20260723-103734\package'
-Copy-Item "$uiBackup\src\settings\ui\index.ts" "$pkg\src\settings\ui\index.ts" -Force
-Copy-Item "$uiBackup\src\settings\ui\submenus.ts" "$pkg\src\settings\ui\submenus.ts" -Force
-Copy-Item "$backup\package\index.js" "$pkg\dist\index.js" -Force
-```
-
-Configuración actual esperada:
+`pi-tool-display@0.5.0` se instaló globalmente para reducir bloques extensos como los resultados de `ffgrep`:
 
 ```json
-"tools": []
+"customToolOverrides": {
+  "ffgrep": { "enabled": true, "kind": "generic", "outputMode": "summary" },
+  "fffind": { "enabled": true, "kind": "generic", "outputMode": "summary" }
+}
 ```
 
-Tras actualizar `pi-code-previews`, revisar la versión antes de reaplicar. Si
-sigue siendo `0.1.36`, respaldar primero y aplicar el patch desde la raíz de
-este repo. La actualización incluye tanto la allowlist autoritativa como el
-guardado inmediato de cada toggle:
+En modo `summary`, la vista colapsada muestra sólo cantidad de líneas y conserva el resultado completo con `Ctrl+O`. Snapshot saneado: `pi-extensions/pi-tool-display.json`; config viva: `~/.pi/agent/extensions/pi-tool-display/config.json`.
+
+Evidencia:
+
+- `pi list` resolvió `npm:pi-tool-display@0.5.0`;
+- RPC registró `/tool-display` desde scope global `user/package`;
+- el loader resolvió ownership built-in completamente apagado;
+- `ffgrep` y `fffind` resolvieron como `generic/summary`;
+- RPC fresco cargó ambos renderers sin `extension_error`;
+- backup inicial: `~/.pi/agent/backups/pi-tool-display-adoption-20260725-110418/`;
+- backup del modo ultra compacto: `~/.pi/agent/backups/pi-ultra-compact-20260725-111740/`;
+- backup previo al ajuste de orden: `~/.pi/agent/backups/pi-tool-display-load-order-20260725-114830/`.
+
+Riesgos: intercepta el registro y render de tools; no activar ownership visual solapado en otros renderers. El output enviado al modelo no cambia, sólo la presentación colapsada. Tras cambios, ejecutar `/reload` y probar `ffgrep`, `fffind`, `read`, `edit` y `Ctrl+O`.
+
+Rollback:
 
 ```powershell
-$patch = 'C:\dev\pi\pi-extensions\patches\pi-code-previews-0.1.36-tools-authoritative.patch'
-$pkg = "$env:USERPROFILE\.pi\agent\npm\node_modules\pi-code-previews"
-git apply --check --unsafe-paths --directory="$pkg" $patch
-git apply --unsafe-paths --directory="$pkg" $patch
+pi remove npm:pi-tool-display
+Copy-Item "$env:USERPROFILE\.pi\agent\backups\pi-tool-display-adoption-20260725-110418\settings.json" "$env:USERPROFILE\.pi\agent\settings.json" -Force
+Remove-Item "$env:USERPROFILE\.pi\agent\extensions\pi-tool-display\config.json" -Force
 ```
 
-Verificar que `src/settings/values.ts`, `src/tools/selection.ts` y `dist/index.js`
-contengan la variante autoritativa. Luego ejecutar `/reload`,
-`/code-preview-health` y confirmar que todos los tools figuren desactivados.
-No aplicar este patch a otra versión sin revisar el diff: el paquete puede haber
-incorporado ya la corrección o cambiar sus contextos.
+Luego `/reload`. El install reportó dos advisories npm del árbol global (1 moderate, 1 high), pero `npm audit` no pudo consultar el endpoint por un fallo TLS; no se ejecutó `npm audit fix` ni se alteraron dependencias adicionales.
+
+Fuentes:
+
+- custom override y decoración de tools registradas: <https://github.com/MasuRii/pi-tool-display/blob/91cef7580078371f8dc49a8607222807ad6a424d/src/tool-overrides.ts#L1918-L2061>;
+- modos `hidden`/`summary`/`preview` y expansión completa: <https://github.com/MasuRii/pi-tool-display/blob/91cef7580078371f8dc49a8607222807ad6a424d/src/tool-overrides.ts#L1198-L1237>.
+
+## Built-ins: `pi-code-previews`
+
+`pi-code-previews` posee `bash`, `read`, `write`, `edit`, `grep`, `find` y `ls`. Su snapshot `pi-extensions/pi-code-previews.json` fija:
+
+- previews de contenido, resultados y diffs en `false`;
+- `toolCallBackground: off` y timing/syntax apagados;
+- detalle completo disponible con `Ctrl+O`.
+
+Estado validado:
+
+- paquete fijado: `pi-code-previews@0.1.36`;
+- `/code-preview-health` está registrado por RPC sin errores;
+- `/code-preview-settings` abre su configuración.
+
+## Parche Histórico Retirado
+
+El patch `pi-code-previews-0.1.36-tools-authoritative.patch` resolvía un caso
+anterior: persistir `tools: []` sin que otros toggles reactivaran renderers. El
+modo actual habilita las siete built-ins, por lo que ese cambio ya no aporta
+valor.
+
+El 2026-07-25 se restauraron desde los backups originales los cinco archivos
+modificados (`values.ts`, `selection.ts`, dos archivos UI y `dist/index.js`). La
+comparación byte a byte pasó y un RPC aislado cargó `/code-preview-health` sin
+errores. El paquete instalado vuelve a ser el upstream limpio `0.1.36`.
+
+Configuración actual:
+
+```json
+{
+  "tools": ["bash", "read", "write", "edit", "grep", "find", "ls"],
+  "toolCallBackground": "off",
+  "editDiffPreview": false
+}
+```
+
+El patch queda versionado sólo como antecedente; no reaplicarlo mientras este
+modo siga usando todas las built-ins. Backup inmediato anterior a la limpieza:
+
+```text
+~/.pi/agent/backups/pi-code-previews-clean-restore-20260725-113303/
+```
 
 ## Renderer Anterior: `pi-claude-code-ui`
 
@@ -136,7 +136,7 @@ incorporado ya la corrección o cambiar sus contextos.
 }
 ```
 
-No activar ambos renderers al mismo tiempo: los dos intervienen en la presentacion de tools y pueden competir por renderers/overrides.
+No dar ownership de una misma tool a ambos renderers: pueden coexistir sólo con responsabilidades disjuntas.
 
 ## Toggle Reversible
 
@@ -148,6 +148,10 @@ Antes de cambiar:
 4. hacer smoke con `read`, `edit`, `bash` y `Ctrl+O`.
 
 Estado actual:
+
+```json
+"npm:pi-tool-display@0.5.0"
+```
 
 ```json
 {

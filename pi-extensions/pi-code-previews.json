@@ -1,0 +1,26 @@
+{
+  "wordEmphasis": "smart",
+  "readContentPreview": false,
+  "writeContentPreview": false,
+  "editDiffPreview": false,
+  "editCollapsedLines": 60,
+  "grepCollapsedLines": 40,
+  "grepResultPreview": false,
+  "findResultPreview": false,
+  "lsResultPreview": false,
+  "pathListCollapsedLines": 10,
+  "bashResultPreview": false,
+  "tools": [
+    "bash",
+    "read",
+    "write",
+    "edit",
+    "grep",
+    "find",
+    "ls"
+  ],
+  "toolCallBackground": "off",
+  "toolCallTiming": false,
+  "readLineNumbers": false,
+  "syntaxHighlighting": false
+}

@@ -51,8 +51,8 @@ El runtime `/flow`, routing e inventario global general viven en `C:/dev/os`; es
 - `pi-extensions/windows-input.ts` y sus instaladores.
 - `pi-extensions/codex-quota.ts` y snapshots portables de keybindings, theme y `pi-sticky-input`.
 - snapshots, patches y restauradores de footer/statusline/usage.
-- renderer actual `pi-code-previews` y renderer anterior desactivado `pi-claude-code-ui`, documentados con toggle/rollback.
-- snapshots/restauradores de tool display y UX compacta.
+- modo ultra compacto: reasoning oculto, `pi-code-previews` para built-ins sin previews y `pi-tool-display@0.5.0` sólo para `ffgrep`/`fffind`; `pi-claude-code-ui` desactivado.
+- snapshots/restauradores de code previews, tool display y UX compacta.
 - tracks/topics con extensiones evaluadas, versiones, estado, comportamiento de APIs, backups, smokes y rollback.
 
 No copiarlas a `.pi/extensions/` si ya están globales: Pi puede cargar duplicados
