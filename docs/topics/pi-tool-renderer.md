@@ -82,6 +82,18 @@ Fuentes:
 - custom override y decoración de tools registradas: <https://github.com/MasuRii/pi-tool-display/blob/91cef7580078371f8dc49a8607222807ad6a424d/src/tool-overrides.ts#L1918-L2061>;
 - modos `hidden`/`summary`/`preview` y expansión completa: <https://github.com/MasuRii/pi-tool-display/blob/91cef7580078371f8dc49a8607222807ad6a424d/src/tool-overrides.ts#L1198-L1237>.
 
+## Sync VPS 2026-07-25
+
+El commit `58e0582` quedó publicado y `~/dev/pi` avanzó por fast-forward. El VPS quedó en Pi `0.82.1` y con las mismas versiones comunes de la PC, incluidos `pi-footer@0.5.0`, `rpiv-advisor@2.1.0`, `pi-code-previews@0.1.36` upstream limpio y `pi-tool-display@0.5.0`.
+
+Se copiaron ambos snapshots con hashes idénticos, se preservó el orden `tool-display → pi-fff → code-previews`, se retiraron peers npm innecesarios y se reiniciaron sólo `pi-web-sessiond.service` y `pi-web.service`. RPC: un `/flow`, sin `aos-gol`, ambos renderers presentes y cero `extension_error`; `pi-web doctor` pasó. Backup remoto:
+
+```text
+/home/jpsal/.pi/agent/backups/pi-ultra-compact-parity-20260725-145903/
+```
+
+`npm audit --omit=peer` reportó 9 advisories transitivos (8 moderate, 1 high); no se ejecutó `npm audit fix`.
+
 ## Built-ins: `pi-code-previews`
 
 `pi-code-previews` posee `bash`, `read`, `write`, `edit`, `grep`, `find` y `ls`. Su snapshot `pi-extensions/pi-code-previews.json` fija:

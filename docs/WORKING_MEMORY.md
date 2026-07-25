@@ -2,7 +2,7 @@
 
 Estado vivo del workspace `pi`. Mantener corto.
 
-Ultima actualizacion manual: 2026-07-23.
+Ultima actualizacion manual: 2026-07-25.
 
 ## Lectura Rapida
 
@@ -22,7 +22,7 @@ Ultima actualizacion manual: 2026-07-23.
 - El inventario global de paquetes Pi y el flow de uso viven en `C:\dev\os`; este repo solo referencia esas fuentes para evitar drift.
 - Extensiones propias portables: `windows-input.ts` y `codex-quota.ts` viven en `pi-extensions/`; keybindings, theme y config de `pi-sticky-input` tienen snapshots saneados en la misma carpeta. Los instaladores existentes de Windows Input siguen en `scripts/install-windows-input.ps1` / `.sh`.
 - Statusline compacta: `pi-openai-usage@0.1.3` con polling de 10 min y patch `pi-extensions/patches/pi-openai-usage-0.1.3-weekly-margin.patch`; salida RPC `7d: NN% · ↺ NdNh · margen ±Nh`. El margen reutiliza el cache y los defaults de `/codex-quota` (12 h/dia × 6,5 dias/semana); el comando conserva el detalle manual. Restauradores Windows/POSIX validan version y patch. Backups: adopcion `~/.pi/agent/backups/openai-usage-adoption-20260722-104538/`, margen `~/.pi/agent/backups/openai-usage-margin-20260722-112058/`.
-- Modo ultra compacto sin patch local activo: `hideThinkingBlock: true`; `pi-code-previews@0.1.36` upstream limpio posee built-ins sin previews, y `pi-tool-display@0.5.0` precede a `pi-fff` para resumir `ffgrep`/`fffind`. Snapshots en `pi-extensions/`; backups `pi-ultra-compact-20260725-111740`, `pi-code-previews-clean-restore-20260725-113303` y `pi-tool-display-load-order-20260725-114830`. Estado y rollback: `docs/topics/pi-tool-renderer.md`.
+- Modo ultra compacto sin patch local activo: `hideThinkingBlock: true`; `pi-code-previews@0.1.36` upstream limpio posee built-ins sin previews, y `pi-tool-display@0.5.0` precede a `pi-fff` para resumir `ffgrep`/`fffind`. PC y VPS quedaron alineados en Pi `0.82.1`; backup remoto `pi-ultra-compact-parity-20260725-145903`. Snapshots y rollback: `docs/topics/pi-tool-renderer.md`.
 - `pi-sticky-input` mantiene `mouseScroll: false`; la rueda de Windows Terminal se traduce a `Ctrl+PageUp/PageDown` desde `C:/dev/main` commit `b916350`, preservando seleccion nativa.
 - UX compacta WebUI/tools: `pi-extensions/pi-tool-display.json`, `pi-extensions/pi-hide-messages.json`, restauradores `scripts/apply-pi-webui-ux.ps1` / `.sh`.
 - Stack global Pi no se inventaría acá; `C:\dev\os` mantiene `/flow`, routing e inventario. Este repo sólo declara `aos.requirements.json`.

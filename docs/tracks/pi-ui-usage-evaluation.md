@@ -42,6 +42,7 @@ Dejar la TUI de Pi compacta y seleccionable, elegir un renderer granular de tool
 - El patch local de code-previews quedó retirado; `pi-claude-code-ui@1.0.74` sigue desactivado y no hay ownership solapado.
 - Backups: `pi-ultra-compact-20260725-111740` y `pi-code-previews-clean-restore-20260725-113303`; RPC aislado del renderer pasó.
 - Pendiente sólo el smoke visual tras `/reload`: `ffgrep`, `fffind`, `read`, `edit` y expansión con `Ctrl+O`.
+- VPS sincronizado el 2026-07-25: Pi `0.82.1`, stack común idéntico, snapshots con hashes iguales, RPC/PI WEB doctor verdes y backup `pi-ultra-compact-parity-20260725-145903`.
 - Estado, fuentes, config y rollback canónicos: `docs/topics/pi-tool-renderer.md`.
 
 ### Cuota Codex
