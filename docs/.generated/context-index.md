@@ -2,7 +2,7 @@
 
 Generated cache. Do not edit by hand.
 
-Generated: 2026-07-25T15:20:24.226Z
+Generated: 2026-08-01T19:45:20.011Z
 
 ## Topics
 
@@ -16,12 +16,13 @@ Generated: 2026-07-25T15:20:24.226Z
 - active: [pi-extension-stack](../topics/pi-extension-stack.md) - extensiones pi, paquetes pi, pi packages, sincronizar pi, windows-input, pi footer, pi statusline, tool display
 - active: [pi-statusline-customization](../topics/pi-statusline-customization.md) - pi footer, pi statusline, chrome status, codex usage, otra pc, actualizar extensiones
 - active: [pi-tool-renderer](../topics/pi-tool-renderer.md) - renderer Pi, estilos tools, estilo Pi, pi-code-previews, pi-claude-code-ui, tool previews, Ctrl+O
+- active: [wezterm-attention](../topics/wezterm-attention.md) - wezterm attention, tabs pi, pi esperando pregunta, indicador pi, ask_user tab
 - active: [windows-input-extension](../topics/windows-input-extension.md) - windows-input, seleccion pi, shift arrow, ctrl shift arrow, custom editor, extension input
 
 ## Tracks
 
 - active: [Pi UI And Usage Evaluation](../tracks/pi-ui-usage-evaluation.md)
-- complete: [Pi Workspace Flow Alignment](../tracks/pi-workspace-flow-alignment.md)
+- Other tracks are omitted from the hot index; search `docs/tracks/` on demand.
 
 ## Specs
 
@@ -39,7 +40,7 @@ Generated: 2026-07-25T15:20:24.226Z
 
 ## Pi Resources
 
-- Global extensions: codex-quota.ts, windows-input.ts
+- Global extensions: codex-quota.ts, wezterm-attention-bridge.ts, windows-input.ts
 - Guidance: [pi-agentic-os](../topics/pi-agentic-os.md)
 
 ## Aliases

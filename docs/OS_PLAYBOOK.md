@@ -10,9 +10,13 @@ Guía corta para este workspace de customizaciones Pi.
 | Windows Input | `/windows-input status`, `/windows-input on/off/toggle` |
 | Footer/statusline/UX | topic y restaurador local correspondiente |
 
-Planear declara `economical` (Luna High), `balanced` (Sol Medium, default) o
-`strong` (Sol High). Hacer aplica esa ruta en la sesión nueva y bloquea sin
-fallback si falta modelo o auth.
+`balanced` con Sol Medium es la ruta normal aun para trabajo multifile,
+cross-layer o nativo acotado. `strong` con Sol High queda sólo para ambigüedad
+material o fallos materiales difíciles de detectar; prioridad, cantidad de
+archivos o un efecto externo autorizado no bastan. `economical` con Luna requiere
+pedido explícito de JP por cuota y checks deterministas. `Ctrl+P` alterna Sol
+Medium/High y `Ctrl+L` conserva la selección manual. Hacer aplica la ruta en la
+sesión nueva y bloquea sin fallback si falta modelo o auth.
 
 ## Contexto Local
 

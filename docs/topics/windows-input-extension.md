@@ -44,6 +44,12 @@ Una sesión nueva de Pi carga automáticamente la ubicación global. En sesiones
 /reload
 ```
 
+Ajuste 2026-07-25: `Ctrl+C` sin selección vuelve a delegar a `app.clear`.
+Backup previo en
+`~/.pi/agent/backups/windows-input-ctrl-c-20260725-193515/`.
+Para rollback, restaurar `windows-input.ts` desde ese directorio y ejecutar
+`/reload`.
+
 ## Qué hace
 
 No es específica de Windows como sistema operativo: el nombre describe la semántica de edición tipo Windows/VS Code. La extensión debería funcionar también en Linux/macOS si el terminal entrega las combinaciones de teclas a Pi.
@@ -54,7 +60,9 @@ Reemplaza el editor principal del prompt de Pi con un `CustomEditor` que agrega 
 - `Shift+Arrow`: extender selección.
 - `Ctrl+Shift+Left/Right`: extender selección por palabra.
 - `Shift+Home/End` y `Ctrl+Shift+Home/End`: seleccionar hasta límites de línea/documento.
-- `Ctrl+C`: copiar selección; si no hay selección, no limpia el editor.
+- `Ctrl+C`: copiar selección; si no hay selección, delegar a `app.clear` y
+  limpiar el prompt (un segundo `Ctrl+C` rápido conserva la salida estándar de
+  Pi).
 - `Ctrl+X`: cortar selección; si no hay selección, no limpia el editor.
 - `Ctrl+V`: intenta pegar texto del clipboard del sistema si Pi recibe la tecla; el paste normal del terminal también funciona.
 - `Backspace`, `Delete`, escritura y paste reemplazan selección.
@@ -88,6 +96,12 @@ Estado validado:
 - Probe y smoke fisico pasaron. Commit `C:/dev/main`: `b916350`.
 
 Si vuelve a fallar la seleccion, probar primero `/sticky-input mouse off`; no desactivar `windows-input` salvo que tambien falle la seleccion por teclado/render del editor.
+
+## Paths Windows en `!` y `!!`
+
+Pi ejecuta los comandos directos del usuario mediante Git Bash incluso en Windows. Una ruta sin comillas como `C:\dev\os` pierde las barras porque Bash las interpreta como escapes. `windows-input` intercepta `user_bash` en Windows y normaliza únicamente paths con letra de unidad a `C:/dev/os` antes de delegar al backend Bash original.
+
+La transformación cubre paths sin espacios y paths entre comillas; no cambia comandos en otros sistemas ni reemplaza el shell global. Smoke focal: `notepad c:\dev\os` → `notepad c:/dev/os`. Fuente y copia global sincronizadas el 2026-07-31. Backup: `~/.pi/agent/backups/windows-input-paths-20260731-123316/`. Para aplicar en sesiones abiertas ejecutar `/reload`; rollback: restaurar `windows-input.ts` desde ese backup y volver a ejecutar `/reload`.
 
 ## Instalar en otra PC
 

@@ -19,6 +19,96 @@
       "enabled": true,
       "kind": "generic",
       "outputMode": "summary"
+    },
+    "map": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "search": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "outline": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "expand": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "path": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "lens_diagnostics": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "lsp_diagnostics": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "symbol_search": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "module_report": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "read_symbol": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "read_enclosing": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "pi_lens_activate_tools": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "ast_grep_search": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "ast_grep_replace": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "ast_grep_outline": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "ast_grep_dump": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "lsp_navigation": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
+    },
+    "lens_diagnostic_mark": {
+      "enabled": true,
+      "kind": "generic",
+      "outputMode": "summary"
     }
   },
   "enableNativeUserMessageBox": true,

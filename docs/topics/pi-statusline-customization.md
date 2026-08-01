@@ -23,6 +23,8 @@ primary_refs:
 
 Configuracion local de JP para compactar el footer/statusline de Pi sin perder informacion util.
 
+> Estado desde 2026-07-31: `pi-footer@0.5.0` permanece instalado pero filtrado con `extensions: []` por su costo de arranque. El runtime usa el footer nativo de Pi; `pi-openai-usage@0.1.3` sigue publicando su status. Los snapshots, patches y restauradores de `pi-footer` quedan como rollback histórico, no como estado activo.
+
 ## Objetivo
 
 Mantener una sola linea compacta con:
@@ -202,3 +204,30 @@ Si `usage:` desaparece:
 ## Relacion con windows-input
 
 `windows-input` sigue siendo una extension separada. Este statusline solo muestra su status `win-input` inline cuando la extension lo publica.
+
+## Profiling de arranque (2026-07-31)
+
+Se midio `pi 0.83.0` en Windows con `PI_OFFLINE=1`, `PI_SKIP_VERSION_CHECK=1` y `pi --list-models gpt-5.6-sol`, tres corridas calientes por variante. Es un benchmark de carga/inicializacion de extensiones, no de red ni inferencia.
+
+| Variante | Mediana |
+| --- | ---: |
+| Sin extensiones | 1,25 s |
+| Stack global efectivo | 7,29 s |
+| Stack explicitamente cargado (19 entrypoints) | 7,90 s |
+| Stack explicito sin `pi-footer` | 4,80 s |
+| Stack explicito sin `pi-footer` ni `pi-subagents-lite` | 3,13 s |
+| Solo `pi-footer@0.5.0` | 4,50 s |
+| Solo `pi-subagents-lite@1.6.0` | ~2,53 s (corrida orientativa) |
+| Solo `pi-openai-usage@0.1.3` | 1,53 s |
+| Solo `pi-chrome@0.15.46` | 1,25 s |
+
+Conclusiones:
+
+- La hipotesis del statusline es correcta para el arranque, pero el costo esta concentrado en el consumidor/renderizador `pi-footer`, no en los statuses que alimentan la barra.
+- `pi-footer@0.5.0` agrega aproximadamente 3,1 s al stack completo y ~2,8-3,2 s sobre el baseline cuando se aisla. Su entrypoint TypeScript importa de forma eager configuracion, metricas, UI y todo el registro de widgets, aunque el preset activo use pocos widgets.
+- `pi-openai-usage` no explica la demora: usa cache, polling de 10 minutos y su costo aislado fue pequeno. `pi-chrome`, `windows-input` y `codex-quota` quedaron dentro del ruido del benchmark.
+- El segundo costo claro es `pi-subagents-lite`; sin footer ni subagents el arranque baja a ~3,1 s.
+- En runtime no se encontro un loop agresivo de statusline: usage refresca cada 600 s y Chrome solo cada 60 s durante autorizaciones temporales. La config activa de `pi-code-previews` ya tiene `toolCallTiming: false`; `pi-compact-transcript` repinta a 400 ms solo mientras hay tools corriendo.
+- La sesion perfilada consumio ~1,4% de un nucleo durante una muestra activa de 10 s. Habia ocho procesos Pi abiertos, con aproximadamente 1,7 GB de working set combinado; eso puede sumar presion general, pero no explica por si solo la demora reproducible de un arranque nuevo.
+
+El diagnostico condujo al cambio autorizado documentado en `docs/tracks/pi-startup-alternatives.md`: `pi-footer` quedó filtrado y se adoptó el footer nativo. Backup: `~/.pi/agent/backups/pi-startup-trim-20260731-155743/`. `pi-footer@0.5.0` era la última versión publicada al medir.

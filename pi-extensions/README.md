@@ -26,6 +26,15 @@ El agente debe:
 4. Indicar que en Pi hay que ejecutar `/reload` si la sesion ya estaba abierta.
 5. Verificar dentro de Pi con `/windows-input status`.
 
+## Atención de tabs Pi en WezTerm
+
+- Fuente portable del bridge: `pi-extensions/wezterm-attention-bridge.ts`.
+- Writer global: `git:github.com/pro-vi/wezterm-attention`.
+- Renderer visual local: `C:/dev/wizterm/config/plugins.lua`.
+- Guía, smoke y rollback: `docs/topics/wezterm-attention.md`.
+
+El bridge convierte `ask_user` y `ask_user_question` en `notify` para mostrar `!` rojo mientras esperan respuesta. `/reload` recarga esta extensión Pi; la parte visual necesita recargar la configuración de WezTerm o reiniciarlo.
+
 ## Statusline compacta de JP
 
 Esta repo tambien guarda la configuracion compacta del footer/statusline de Pi:
@@ -58,10 +67,11 @@ Luego ejecutar `/reload` dentro de Pi.
 
 ## Renderer de tools
 
-- Built-ins: `pi-code-previews@0.1.36`, una línea sin fondo, timing ni previews colapsadas; snapshot `pi-extensions/pi-code-previews.json`.
-- Custom: `pi-tool-display@0.5.0`, sin ownership built-in y con `ffgrep`/`fffind` en `summary`; snapshot `pi-extensions/pi-tool-display.json`.
-- `hideThinkingBlock: true` oculta el razonamiento visible; config viva en `~/.pi/agent/settings.json`.
-- El patch `pi-code-previews-0.1.36-tools-authoritative.patch` queda sólo como antecedente: el paquete instalado volvió al upstream limpio `0.1.36` porque el modo actual habilita las siete built-ins.
+- Transcript global: `pi-compact-transcript@0.6.2`; colapsa cualquier tool built-in/custom a una línea y devuelve el renderer original con `Ctrl+O`.
+- Detalle built-in: `pi-code-previews@0.1.36`, sin fondo ni previews colapsadas; snapshot `pi-extensions/pi-code-previews.json`.
+- `pi-tool-display@0.5.0` quedó instalado pero inactivo: Pi 0.82.1 no permite que una extensión decore públicamente renderers registrados por otra. Su snapshot se conserva como antecedente.
+- `hideThinkingBlock: true` y `outputPad: 0` reducen el ruido restante; config viva en `~/.pi/agent/settings.json`.
+- El patch `pi-code-previews-0.1.36-tools-authoritative.patch` queda sólo como antecedente; el paquete instalado es upstream limpio.
 - Anterior: `pi-claude-code-ui@1.0.74`, instalada pero desactivada.
 - Guía canónica de estado, fuentes, smokes y rollback: `docs/topics/pi-tool-renderer.md`.
 
@@ -71,8 +81,9 @@ No dar ownership de la misma tool a dos renderers. Backup del modo ultra compact
 
 Esta repo guarda tambien la configuracion de legibilidad para reducir ruido en Pi. Es configuracion local de JP, no dependencia AOS para repos destino:
 
-- `pi-extensions/pi-code-previews.json`: built-ins sin fondo ni previews colapsadas.
-- `pi-extensions/pi-tool-display.json`: sin built-ins; `ffgrep`/`fffind` en resumen.
+- `pi-extensions/pi-code-previews.json`: detalle built-in sin fondo ni previews colapsadas.
+- `pi-extensions/pi-tool-display.json`: snapshot histórico del renderer custom retirado; no representa un paquete activo.
+- `pi-compact-transcript@0.6.2` no requiere config de archivo: se fija globalmente en `settings.json` y alterna por sesión con `/compact-transcript on|off`.
 - `pi-extensions/pi-hide-messages.json`: mantiene visibles los ultimos 12 mensajes.
 - `pi-extensions/pi-keybindings.json`: shortcuts globales compartidos.
 - `pi-extensions/pi-sticky-input.json`: input/scroll compartido, con `mouseScroll: false`.
@@ -114,7 +125,8 @@ Atajos principales:
 - `Shift+Arrow`: extender seleccion.
 - `Ctrl+Shift+Left/Right`: extender seleccion por palabra.
 - `Shift+Home/End` y `Ctrl+Shift+Home/End`: seleccionar hasta limites de linea/documento.
-- `Ctrl+C` / `Ctrl+X`: copiar/cortar selección; sin selección no limpian el editor.
+- `Ctrl+C`: copiar selección; sin selección delega a `app.clear` y limpia el prompt.
+- `Ctrl+X`: cortar selección; sin selección no limpia el editor.
 - `Ctrl+V`: intenta pegar texto del clipboard del sistema cuando Pi recibe la tecla; el pegado normal del terminal también funciona.
 - escribir, pegar, `Backspace` y `Delete`: reemplazan/eliminan seleccion.
 

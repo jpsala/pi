@@ -39,11 +39,16 @@ customizaciones Pi portables de JP.
 | `/flow → Cerrar` | Compactar valor durable todavía faltante; es opcional si Hacer ya persistió el estado. |
 | `/new` | Abrir manualmente una sesión limpia fuera del handoff de Hacer. |
 
-`/flow` precarga texto revisable y nunca autoenvía. Planear declara en el brief
-`execution_route: economical | balanced | strong`: `economical` usa Luna High
-para docs o mecánica de bajo riesgo, `balanced` usa Sol Medium por defecto y
-`strong` usa Sol High para trabajo sensible. Hacer exige foco `ready`: 0 deriva
-a Planear, 1 autoselecciona y N abre picker. La sesión nueva aplica la ruta antes
+`/flow` precarga texto revisable y nunca autoenvía. Planear usa `balanced` con
+Sol Medium como ruta normal, incluso para trabajo multifile, cross-layer o nativo
+acotado cuando la decisión ya está tomada y hay checks razonables. `strong` con
+Sol High queda sólo para ambigüedad material, arquitectura abierta,
+seguridad/auth/privacidad, irreversibilidad, alto impacto productivo o fallos
+materiales difíciles de detectar; prioridad, cantidad de archivos o un efecto
+externo autorizado no bastan. `economical` con Luna requiere pedido explícito de
+JP por cuota y checks deterministas. `Ctrl+P` alterna Sol Medium/High y `Ctrl+L`
+conserva la selección manual. Hacer exige foco `ready`: 0 deriva a Planear, 1
+autoselecciona y N abre picker. La sesión nueva aplica la ruta antes
 de precargar índice, Working Memory y brief; modelo o auth ausentes bloquean sin
 fallback. No promete transportar conversación transitoria y ejecuta en ese hilo
 principal, sin Agent ni otra sesión.

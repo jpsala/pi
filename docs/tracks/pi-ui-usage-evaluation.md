@@ -38,11 +38,13 @@ Dejar la TUI de Pi compacta y seleccionable, elegir un renderer granular de tool
 
 ### Renderer de tools
 
-- Modo ultra compacto: `hideThinkingBlock: true`; `pi-code-previews@0.1.36` upstream limpio posee built-ins sin fondo/previews y `pi-tool-display@0.5.0` sólo resume `ffgrep`/`fffind`.
-- El patch local de code-previews quedó retirado; `pi-claude-code-ui@1.0.74` sigue desactivado y no hay ownership solapado.
-- Backups: `pi-ultra-compact-20260725-111740` y `pi-code-previews-clean-restore-20260725-113303`; RPC aislado del renderer pasó.
-- Pendiente sólo el smoke visual tras `/reload`: `ffgrep`, `fffind`, `read`, `edit` y expansión con `Ctrl+O`.
-- VPS sincronizado el 2026-07-25: Pi `0.82.1`, stack común idéntico, snapshots con hashes iguales, RPC/PI WEB doctor verdes y backup `pi-ultra-compact-parity-20260725-145903`.
+- Modo global ultra compacto: `pi-compact-transcript@0.6.2`, `hideThinkingBlock: true` y `outputPad: 0`; todas las tools built-in/custom se colapsan a una línea y `Ctrl+O` conserva el renderer original.
+- `pi-code-previews@0.1.36` upstream limpio queda como detalle expandido de built-ins; `pi-claude-code-ui@1.0.74` sigue desactivado.
+- Los smokes de `expand` en Constelaciones y `ffgrep` en Copicu demostraron que `pi-tool-display@0.5.0` no podía decorar tools de otras extensiones en Pi 0.82.1. Quedó instalado pero retirado de `settings.json`.
+- Validación runtime: una tool custom con renderer propio de 100 líneas produjo 1 línea colapsada y 104 al expandir; RPC registró `/compact-transcript` sin `extension_error`.
+- Backup: `pi-compact-transcript-20260725-202053`. Los dos advisories npm transitivos ya existían antes de instalar; no se ejecutó `npm audit fix`.
+- Pendiente sólo `/reload` y smoke humano en sesiones abiertas con FFF, CodeMapper, Lens, `read`, `edit` y `Ctrl+O`.
+- El VPS todavía conserva el stack anterior; cualquier sincronización remota requiere autorización separada.
 - Estado, fuentes, config y rollback canónicos: `docs/topics/pi-tool-renderer.md`.
 
 ### Cuota Codex
@@ -111,10 +113,36 @@ Integracion aplicada:
 - `pi-codex-status` headers: <https://github.com/lhl/pi-codex-status/blob/bc2643e01a13c8c7a849de5f6c572da4cfd2a5c9/src/extension.ts#L259-L273>
 - `@narumitw/pi-usage`: <https://github.com/narumiruna/pi-extensions/blob/822ddf011ceeb6846f5da74d3bab6d4ee81e38f0/extensions/pi-usage/README.md#L5-L23>
 
+## Diagnóstico De Rendimiento 2026-07-25
+
+La lentitud observada no coincide con saturación de la PC: CPU total 8–13%,
+32 GB de 63 GB de RAM libres, disco sin latencia apreciable y plan High
+performance a 3,8 GHz. Cinco procesos Pi consumían ~1,8 GB en total; Windows
+Terminal usaba ~131 MB y menos de 5% de un core.
+
+Los costos medidos están en Pi y su camino de trabajo:
+
+- startup RPC del core: ~1,1 s; stack global completo: ~8,5 s;
+- extensiones aisladas: footer ~3,8 s, subagents ~2,3 s y Lens ~1,8 s,
+  incluyendo ~1,1 s del core en cada medición;
+- en la sesión activa de Constelaciones, 35 respuestas de Sol High tardaron
+  mediana 7,1 s y p90 10,3 s; cada tool loop agrega otro round-trip;
+- Pi Lens registró bloqueos del event loop de 1,1–4,1 s;
+- sobre `admin.appointments.tsx`, cada edit disparó ~5,2–5,4 s de pipeline,
+  dominado por ESLint (~5 s), más ~1,3 s de checks de fin de turno.
+
+Conclusión: no hay evidencia de cuello de botella de CPU, RAM o disco. La demora
+percibida combina Sol High + muchas tools secuenciales, checks síncronos de Lens
+en archivos grandes y el costo de cargar el stack global. No se cerraron procesos
+ni se cambió configuración por este diagnóstico. A/B reversible recomendado:
+`/lens-toggle` en una sesión de Constelaciones para pausar análisis automático,
+y usar `think:medium`/ruta `balanced` en trabajo normal; reactivar Lens con el
+mismo comando antes del check final.
+
 ## Proximo Smoke Y Mantenimiento
 
-1. Ejecutar `/reload`; confirmar visualmente `ffgrep`/`fffind` compactos y `usage:7d: NN% · ↺ NdNh · margen ±Nh`.
-2. En tools, probar además `read`, `edit` y `Ctrl+O`; en usage, RPC confirmó auth, fetch HTTP 200, status con margen y respuesta `success:true`. El cierre del probe RPC en Windows termina luego con un assertion libuv/código 127 separado del funcionamiento validado.
+1. Ejecutar `/reload`; confirmar visualmente FFF, CodeMapper y Lens compactos, además de `usage:7d: NN% · ↺ NdNh · margen ±Nh`.
+2. En tools, probar además `read`, `edit` y `Ctrl+O`; `summary` debe mostrar sólo llamada/resumen y revelar el detalle al expandir. En usage, RPC confirmó auth, fetch HTTP 200, status con margen y respuesta `success:true`.
 3. Si el API vuelve a publicar dos ventanas, el margen seguira buscando la ventana de 604800 segundos; revisar solo la presentacion 5h+7d.
 4. Rollback del margen: restaurar `C:/Users/jpsal/.pi/agent/backups/openai-usage-margin-20260722-112058/` o revertir el patch sobre `pi-openai-usage@0.1.3`, luego `/reload`.
 5. Rollback total: `pi remove npm:pi-openai-usage`, restaurar el backup de adopcion y ejecutar `/reload`.

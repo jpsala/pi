@@ -25,6 +25,7 @@ No abrir docs largos ni crear estructura de producto: este workspace no es un ru
 - Si aparecen archivos preexistentes de contexto, integrarlos, indexarlos, archivarlos o preguntar antes de borrarlos.
 - Limitar `init/adopt/update/perfect os` a la capa agentica salvo pedido explicito.
 - Para implementacion/review, `docs/topics/minimal-implementation.md` es politica liviana opcional: reusar lo existente y evitar dependencias/boilerplate innecesarios; Ponytail no es obligatorio ni dependencia local.
+- Para abrir otra sesion Pi por pedido de JP, usar un tab nuevo en la ventana WezTerm actual, no Windows Terminal ni una ventana nueva. Nombrar el tab como `<proyecto> · <tarea corta>` y corroborar pane/window/tab; usar `docs/topics/wezterm-attention.md` como guia portable y `C:/dev/wezterm/docs/topics/wezterm-config.md` como referencia canonica de esta PC.
 
 ## Web, Internet E Instalaciones
 
@@ -35,7 +36,8 @@ No abrir docs largos ni crear estructura de producto: este workspace no es un ru
 ## Comandos AOS
 
 - `/flow` es la única entrada diaria: `Pensar | Planear | Hacer | Cerrar`.
-- Planear declara `execution_route: economical | balanced | strong`; Hacer aplica esa ruta (`balanced` por defecto) y bloquea sin fallback si falta modelo o auth.
+- Planear usa `balanced` con Sol Medium como ruta normal, incluso para trabajo multifile/cross-layer/nativo acotado. `strong` con Sol High queda sólo para ambigüedad material, arquitectura abierta, seguridad/auth/privacidad, irreversibilidad, alto impacto productivo o fallos materiales difíciles de detectar. `economical` con Luna requiere pedido explícito de JP por cuota y checks deterministas. Hacer bloquea sin fallback si falta modelo o auth.
+- `Ctrl+P` alterna Sol Medium/High; `Ctrl+L` conserva la selección manual de modelo.
 - Hacer abre una sesión nueva enlazada con handoff documental revisable y ejecuta directamente allí, sin Agent ni auto-send; Cerrar es opcional si Hacer ya persistió el estado y `/new` queda para sesiones manuales.
 - `realinear os` / `aos-realinear-os` abre `docs/topics/agentic-os-operations.md`; perfect/init/adopt/update/align son operaciones manager-only desde `C:/dev/os`.
 - No mantener prompts de lifecycle, motores alternativos ni una copia local de `/flow`.

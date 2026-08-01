@@ -13,7 +13,12 @@
  * Toggle: /windows-input on|off|toggle|status
  */
 
-import { CustomEditor, copyToClipboard, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import {
+	CustomEditor,
+	copyToClipboard,
+	createLocalBashOperations,
+	type ExtensionAPI,
+} from "@earendil-works/pi-coding-agent";
 import {
 	CURSOR_MARKER,
 	decodeKittyPrintable,
@@ -42,6 +47,17 @@ function comparePos(a: Pos, b: Pos): number {
 
 function normalizeText(text: string): string {
 	return text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\t/g, "    ");
+}
+
+export function normalizeWindowsDrivePathsForBash(command: string): string {
+	if (platform() !== "win32") return command;
+
+	const normalizePath = (path: string) => path.replace(/\\/g, "/");
+	const quoted = command.replace(/(["'])([A-Za-z]:\\[^"'`\r\n]*)\1/g, (_match, quote, path) => {
+		return `${quote}${normalizePath(path)}${quote}`;
+	});
+
+	return quoted.replace(/\b[A-Za-z]:\\[^\s"'`|;&<>]*/g, normalizePath);
 }
 
 function stripBracketedPaste(data: string): string | undefined {
@@ -360,8 +376,12 @@ class WindowsInputEditor extends CustomEditor {
 
 		if (matchesKey(data, "ctrl+c")) {
 			const selected = this.selectedText();
-			if (selected) copyText(selected);
-			// Windows-style text boxes do nothing when Ctrl+C has no selection.
+			if (selected) {
+				copyText(selected);
+				return;
+			}
+			// Preserve Pi's app.clear action when there is no selection.
+			super.handleInput(data);
 			return;
 		}
 
@@ -552,7 +572,7 @@ class WindowsInputEditor extends CustomEditor {
 		}
 
 		for (const layoutLine of visibleLines) {
-			let displayText = this.renderTextLine(layoutLine);
+			const displayText = this.renderTextLine(layoutLine);
 			let lineVisibleWidth = visibleWidth(layoutLine.text);
 			let cursorInPadding = false;
 			if (layoutLine.hasCursor && layoutLine.cursorPos === layoutLine.text.length) {
@@ -604,7 +624,7 @@ class WindowsInputEditor extends CustomEditor {
 				const chunk = chunks[chunkIndex];
 				const isLastChunk = chunkIndex === chunks.length - 1;
 				let hasCursor = false;
-				let cursorPos = undefined;
+				let cursorPos: number | undefined;
 				if (isCurrentLine) {
 					if (isLastChunk) hasCursor = cursor.col >= chunk.startIndex;
 					else hasCursor = cursor.col >= chunk.startIndex && cursor.col < chunk.endIndex;
@@ -662,6 +682,18 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("session_shutdown", (_event, ctx) => {
 		ctx.ui.setStatus?.("windows-input", undefined);
+	});
+
+	pi.on("user_bash", () => {
+		if (platform() !== "win32") return;
+		const local = createLocalBashOperations();
+		return {
+			operations: {
+				exec(command: string, cwd: string, options: any) {
+					return local.exec(normalizeWindowsDrivePathsForBash(command), cwd, options);
+				},
+			},
+		};
 	});
 
 	pi.registerCommand("windows-input", {
